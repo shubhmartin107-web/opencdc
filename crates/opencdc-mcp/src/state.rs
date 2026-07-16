@@ -180,7 +180,7 @@ impl AppState {
 
     pub async fn shutdown_all(&self) {
         let mut connectors = self.connectors.write().await;
-        for (_, connector) in connectors.iter_mut() {
+        for connector in connectors.values_mut() {
             connector.status = ConnectorStatus::Stopped;
         }
         let mut sinks = self.active_sinks.lock().await;
