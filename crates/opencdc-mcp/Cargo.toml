@@ -1,0 +1,24 @@
+[package]
+name = "opencdc-mcp"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+opencdc-core = { path = "../opencdc-core" }
+opencdc-connector = { path = "../opencdc-connector" }
+opencdc-schema = { path = "../opencdc-schema" }
+
+rmcp = { workspace = true }
+schemars = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+tokio = { workspace = true }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+anyhow = "1"
+
+[[bin]]
+name = "opencdc-mcp"
+path = "src/main.rs"

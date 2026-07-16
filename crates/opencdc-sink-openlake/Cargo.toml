@@ -1,0 +1,18 @@
+[package]
+name = "opencdc-sink-openlake"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "OpenCDC sink that writes CDC events into OpenLake's in-memory TableStore"
+
+[dependencies]
+opencdc-core = { path = "../opencdc-core" }
+opencdc-pipeline = { path = "../opencdc-pipeline" }
+arrow.workspace = true
+serde_json.workspace = true
+tokio.workspace = true
+tracing.workspace = true
+async-trait.workspace = true
+openlake-core.workspace = true
+openlake-query.workspace = true
+reqwest.workspace = true

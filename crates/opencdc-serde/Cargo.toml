@@ -1,0 +1,19 @@
+[package]
+name = "opencdc-serde"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Debezium-compatible JSON serde, Arrow RecordBatch conversion, Avro schema generation"
+
+[dependencies]
+opencdc-core = { path = "../opencdc-core" }
+arrow = { workspace = true, features = ["json"] }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+chrono = { workspace = true }
+apache-avro = "0.17"
+base64 = "0.22"
+
+[dev-dependencies]
+pretty_assertions = { workspace = true }

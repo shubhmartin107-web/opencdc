@@ -1,0 +1,23 @@
+#!/bin/sh
+# Pre-commit hook for OpenCDC
+# Install: git config core.hooksPath .githooks
+set -e
+
+echo "=== Pre-commit checks ==="
+
+# Check formatting
+echo "--- cargo fmt ---"
+cargo fmt --all --check
+echo "OK"
+
+# Check clippy
+echo "--- cargo clippy ---"
+cargo clippy --workspace --all-features -- -D warnings
+echo "OK"
+
+# Run tests
+echo "--- cargo test ---"
+cargo test --workspace --all-features 2>&1 | tail -1
+echo "OK"
+
+echo "=== All checks passed ==="

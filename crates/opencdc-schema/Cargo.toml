@@ -1,0 +1,21 @@
+[package]
+name = "opencdc-schema"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Debezium SchemaBuilder, Confluent Schema Registry client, Arrow<->Debezium schema bridge"
+
+[dependencies]
+opencdc-core = { path = "../opencdc-core" }
+arrow = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+tracing = "0.1"
+reqwest = { workspace = true }
+url = "2"
+tokio = { workspace = true }
+
+[dev-dependencies]
+pretty_assertions = { workspace = true }
+tokio = { workspace = true, features = ["rt", "macros"] }

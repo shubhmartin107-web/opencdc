@@ -1,0 +1,79 @@
+services:
+  postgres:
+    image: postgres:16
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    command:
+      - postgres
+      - -c
+      - wal_level=logical
+      - -c
+      - max_replication_slots=5
+      - -c
+      - max_wal_senders=5
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - ./scripts/init-postgres.sql:/docker-entrypoint-initdb.d/init-postgres.sql
+    profiles:
+      - postgres
+      - all
+
+  mysql:
+    image: mysql:8.0
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: mydb
+    command:
+      - --binlog-format=ROW
+      - --binlog-row-metadata=FULL
+      - --server-id=1
+      - --enforce-gtid-consistency=ON
+      - --gtid-mode=ON
+      - --log-bin=mysql-bin
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-prootpass"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - ./scripts/init-mysql.sql:/docker-entrypoint-initdb.d/init-mysql.sql
+    profiles:
+      - mysql
+      - all
+
+  mongodb:
+    image: mongo:7
+    ports:
+      - "27017:27017"
+    command: ["mongod", "--replSet", "rs0", "--bind_ip", "0.0.0.0"]
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "rs.status().ok", "--host", "localhost:27017"]
+      interval: 10s
+      timeout: 10s
+      retries: 30
+      start_period: 15s
+    profiles:
+      - mongodb
+      - all
+
+  mongodb-init:
+    image: mongo:7
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    volumes:
+      - ./scripts/init-mongo.js:/init-mongo.js
+    entrypoint: ["mongosh", "--host", "mongodb:27017", "--file", "/init-mongo.js"]
+    profiles:
+      - mongodb
+      - all
