@@ -118,9 +118,7 @@ pub struct LogTransform {
 
 impl LogTransform {
     pub fn new(name: impl Into<String>) -> Self {
-        Self {
-            name: name.into(),
-        }
+        Self { name: name.into() }
     }
 }
 
@@ -144,8 +142,8 @@ impl Transform for LogTransform {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use opencdc_core::source_info::SourceInfo;
     use opencdc_core::ConnectorType;
+    use opencdc_core::source_info::SourceInfo;
 
     fn make_event(op: Operation, table: &str, db: &str) -> ChangeEvent {
         let source = SourceInfo::new(&ConnectorType::Postgres, db, Some("public"), table);
@@ -172,16 +170,20 @@ mod tests {
     #[tokio::test]
     async fn test_filter_exclude_snapshot() {
         let transform = FilterTransform::exclude_snapshot();
-        assert!(transform
-            .transform(make_event(Operation::Create, "t", "db"))
-            .await
-            .unwrap()
-            .is_some());
-        assert!(transform
-            .transform(make_event(Operation::Read, "t", "db"))
-            .await
-            .unwrap()
-            .is_none());
+        assert!(
+            transform
+                .transform(make_event(Operation::Create, "t", "db"))
+                .await
+                .unwrap()
+                .is_some()
+        );
+        assert!(
+            transform
+                .transform(make_event(Operation::Read, "t", "db"))
+                .await
+                .unwrap()
+                .is_none()
+        );
     }
 
     #[tokio::test]

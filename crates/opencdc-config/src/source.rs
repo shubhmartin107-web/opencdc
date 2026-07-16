@@ -25,35 +25,37 @@ impl SourceConfig {
     }
 
     pub fn from_raw(value: toml::Value) -> Result<Self> {
-        let table = value.as_table().ok_or_else(|| {
-            Error::Other("connector config must be a table".to_string())
-        })?;
+        let table = value
+            .as_table()
+            .ok_or_else(|| Error::Other("connector config must be a table".to_string()))?;
 
-        let connector_type = table.get("type")
+        let connector_type = table
+            .get("type")
             .and_then(|v| v.as_str())
             .ok_or_else(|| Error::Other("connector config missing 'type' field".to_string()))?;
 
         match connector_type {
             "postgres" | "postgresql" => {
-                let cfg: PostgresSourceConfig = value.try_into().map_err(|e| {
-                    Error::Other(format!("invalid postgres config: {}", e))
-                })?;
+                let cfg: PostgresSourceConfig = value
+                    .try_into()
+                    .map_err(|e| Error::Other(format!("invalid postgres config: {}", e)))?;
                 Ok(Self::Postgres(cfg))
             }
             "mysql" | "mariadb" => {
-                let cfg: MySqlSourceConfig = value.try_into().map_err(|e| {
-                    Error::Other(format!("invalid mysql config: {}", e))
-                })?;
+                let cfg: MySqlSourceConfig = value
+                    .try_into()
+                    .map_err(|e| Error::Other(format!("invalid mysql config: {}", e)))?;
                 Ok(Self::MySql(cfg))
             }
             "mongodb" | "mongo" => {
-                let cfg: MongoDbSourceConfig = value.try_into().map_err(|e| {
-                    Error::Other(format!("invalid mongodb config: {}", e))
-                })?;
+                let cfg: MongoDbSourceConfig = value
+                    .try_into()
+                    .map_err(|e| Error::Other(format!("invalid mongodb config: {}", e)))?;
                 Ok(Self::MongoDb(cfg))
             }
             other => Err(Error::Other(format!(
-                "unsupported connector type '{}'", other
+                "unsupported connector type '{}'",
+                other
             ))),
         }
     }
@@ -77,10 +79,18 @@ pub struct PostgresSourceConfig {
     pub table_include: Vec<String>,
 }
 
-fn default_pg_host() -> String { "localhost".to_string() }
-fn default_pg_port() -> u16 { 5432 }
-fn default_slot_name() -> String { "opencdc_slot".to_string() }
-fn default_publication() -> String { "opencdc_publication".to_string() }
+fn default_pg_host() -> String {
+    "localhost".to_string()
+}
+fn default_pg_port() -> u16 {
+    5432
+}
+fn default_slot_name() -> String {
+    "opencdc_slot".to_string()
+}
+fn default_publication() -> String {
+    "opencdc_publication".to_string()
+}
 
 #[derive(Debug, Clone, serde::Deserialize)]
 pub struct MySqlSourceConfig {
@@ -98,9 +108,15 @@ pub struct MySqlSourceConfig {
     pub tables: Vec<String>,
 }
 
-fn default_mysql_host() -> String { "localhost".to_string() }
-fn default_mysql_port() -> u16 { 3306 }
-fn default_server_id() -> u32 { 1001 }
+fn default_mysql_host() -> String {
+    "localhost".to_string()
+}
+fn default_mysql_port() -> u16 {
+    3306
+}
+fn default_server_id() -> u32 {
+    1001
+}
 
 #[derive(Debug, Clone, serde::Deserialize)]
 pub struct MongoDbSourceConfig {
@@ -127,7 +143,10 @@ password = "pass"
         let value: toml::Value = toml::from_str(toml_str).unwrap();
         let config = SourceConfig::from_raw(value).unwrap();
         assert_eq!(config.name(), "pg1");
-        assert_eq!(config.connector_type(), opencdc_core::ConnectorType::Postgres);
+        assert_eq!(
+            config.connector_type(),
+            opencdc_core::ConnectorType::Postgres
+        );
         match &config {
             SourceConfig::Postgres(c) => {
                 assert_eq!(c.host, "localhost");
@@ -174,7 +193,10 @@ collections = ["users", "orders"]
         let value: toml::Value = toml::from_str(toml_str).unwrap();
         let config = SourceConfig::from_raw(value).unwrap();
         assert_eq!(config.name(), "mongo1");
-        assert_eq!(config.connector_type(), opencdc_core::ConnectorType::Mongodb);
+        assert_eq!(
+            config.connector_type(),
+            opencdc_core::ConnectorType::Mongodb
+        );
         match &config {
             SourceConfig::MongoDb(c) => {
                 assert_eq!(c.collections, vec!["users", "orders"]);

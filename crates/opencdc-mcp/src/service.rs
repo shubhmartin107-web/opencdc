@@ -1,10 +1,6 @@
 use rmcp::{
-    ErrorData as McpError, RoleServer, ServerHandler,
-    handler::server::wrapper::Parameters,
-    model::*,
-    schemars,
-    service::RequestContext,
-    tool, tool_handler, tool_router,
+    ErrorData as McpError, RoleServer, ServerHandler, handler::server::wrapper::Parameters,
+    model::*, schemars, service::RequestContext, tool, tool_handler, tool_router,
 };
 use serde_json::json;
 
@@ -27,10 +23,7 @@ impl McpService {
         Self { state }
     }
 
-    fn connector_info_json(
-        name: &str,
-        mc: &ManagedConnector,
-    ) -> serde_json::Value {
+    fn connector_info_json(name: &str, mc: &ManagedConnector) -> serde_json::Value {
         json!({
             "name": name,
             "status": format!("{:?}", mc.status),
@@ -42,7 +35,10 @@ impl McpService {
     #[tool(description = "List all registered CDC connectors and their status")]
     async fn connector_list(&self) -> Result<CallToolResult, McpError> {
         let _permit = self.state.acquire_tool_permit().await.ok_or_else(|| {
-            McpError::internal_error("rate_limited", Some(json!({"detail": "server is shutting down"})))
+            McpError::internal_error(
+                "rate_limited",
+                Some(json!({"detail": "server is shutting down"})),
+            )
         })?;
         let list = self.state.list_connectors().await;
         let connectors: Vec<serde_json::Value> = list
@@ -61,7 +57,10 @@ impl McpService {
         Parameters(args): Parameters<ConnectorRegisterArgs>,
     ) -> Result<CallToolResult, McpError> {
         let _permit = self.state.acquire_tool_permit().await.ok_or_else(|| {
-            McpError::internal_error("rate_limited", Some(json!({"detail": "server is shutting down"})))
+            McpError::internal_error(
+                "rate_limited",
+                Some(json!({"detail": "server is shutting down"})),
+            )
         })?;
         self.state.register_connector(&args.name).await;
 
@@ -82,7 +81,10 @@ impl McpService {
         Parameters(args): Parameters<ConnectorNameArgs>,
     ) -> Result<CallToolResult, McpError> {
         let _permit = self.state.acquire_tool_permit().await.ok_or_else(|| {
-            McpError::internal_error("rate_limited", Some(json!({"detail": "server is shutting down"})))
+            McpError::internal_error(
+                "rate_limited",
+                Some(json!({"detail": "server is shutting down"})),
+            )
         })?;
         {
             let mut connectors = self.state.connectors.write().await;
@@ -100,7 +102,10 @@ impl McpService {
         Parameters(args): Parameters<ConnectorNameArgs>,
     ) -> Result<CallToolResult, McpError> {
         let _permit = self.state.acquire_tool_permit().await.ok_or_else(|| {
-            McpError::internal_error("rate_limited", Some(json!({"detail": "server is shutting down"})))
+            McpError::internal_error(
+                "rate_limited",
+                Some(json!({"detail": "server is shutting down"})),
+            )
         })?;
         let connectors = self.state.connectors.read().await;
         match connectors.get(&args.name) {
@@ -121,7 +126,10 @@ impl McpService {
         Parameters(args): Parameters<SnapshotStartArgs>,
     ) -> Result<CallToolResult, McpError> {
         let _permit = self.state.acquire_tool_permit().await.ok_or_else(|| {
-            McpError::internal_error("rate_limited", Some(json!({"detail": "server is shutting down"})))
+            McpError::internal_error(
+                "rate_limited",
+                Some(json!({"detail": "server is shutting down"})),
+            )
         })?;
         let status = {
             let connectors = self.state.connectors.read().await;
@@ -164,12 +172,16 @@ impl McpService {
     #[tool(description = "List subjects in the Schema Registry")]
     async fn schema_registry_subjects(&self) -> Result<CallToolResult, McpError> {
         let _permit = self.state.acquire_tool_permit().await.ok_or_else(|| {
-            McpError::internal_error("rate_limited", Some(json!({"detail": "server is shutting down"})))
+            McpError::internal_error(
+                "rate_limited",
+                Some(json!({"detail": "server is shutting down"})),
+            )
         })?;
         match &self.state.schema_registry_client {
             Some(client) => match client.subjects().await {
                 Ok(subjects) => Ok(CallToolResult::success(vec![ContentBlock::text(
-                    serde_json::to_string_pretty(&json!({"subjects": subjects})).unwrap_or_default(),
+                    serde_json::to_string_pretty(&json!({"subjects": subjects}))
+                        .unwrap_or_default(),
                 )])),
                 Err(e) => Err(McpError::internal_error(
                     "schema_registry_error",
@@ -183,15 +195,16 @@ impl McpService {
         }
     }
 
-    #[tool(
-        description = "Get a registered schema from the Schema Registry by its global ID"
-    )]
+    #[tool(description = "Get a registered schema from the Schema Registry by its global ID")]
     async fn schema_registry_get(
         &self,
         Parameters(args): Parameters<SchemaGetArgs>,
     ) -> Result<CallToolResult, McpError> {
         let _permit = self.state.acquire_tool_permit().await.ok_or_else(|| {
-            McpError::internal_error("rate_limited", Some(json!({"detail": "server is shutting down"})))
+            McpError::internal_error(
+                "rate_limited",
+                Some(json!({"detail": "server is shutting down"})),
+            )
         })?;
         match &self.state.schema_registry_client {
             Some(client) => match client.get_schema_by_id(args.id).await {
@@ -244,15 +257,11 @@ pub struct SchemaGetArgs {
 #[tool_handler]
 impl ServerHandler for McpService {
     fn get_info(&self) -> ServerInfo {
-        ServerInfo::new(
-            ServerCapabilities::builder()
-                .enable_tools()
-                .build(),
-        )
-        .with_server_info(Implementation::from_build_env())
-        .with_protocol_version(ProtocolVersion::V_2024_11_05)
-        .with_instructions(
-            "OpenCDC MCP Server - Change Data Capture management.\n\
+        ServerInfo::new(ServerCapabilities::builder().enable_tools().build())
+            .with_server_info(Implementation::from_build_env())
+            .with_protocol_version(ProtocolVersion::V_2024_11_05)
+            .with_instructions(
+                "OpenCDC MCP Server - Change Data Capture management.\n\
              Tools:\n\
              - connector_list: List all connectors\n\
              - connector_register: Register a new connector\n\
@@ -261,8 +270,8 @@ impl ServerHandler for McpService {
              - snapshot_start: Run a table snapshot\n\
              - schema_registry_subjects: List schema registry subjects\n\
              - schema_registry_get: Get a schema by ID"
-            .to_string(),
-        )
+                    .to_string(),
+            )
     }
 
     async fn initialize(

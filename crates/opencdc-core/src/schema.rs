@@ -246,11 +246,7 @@ impl DebeziumField {
         self
     }
 
-    pub fn with_parameter(
-        mut self,
-        key: impl Into<String>,
-        value: impl Into<String>,
-    ) -> Self {
+    pub fn with_parameter(mut self, key: impl Into<String>, value: impl Into<String>) -> Self {
         self.parameters
             .get_or_insert_default()
             .insert(key.into(), value.into());
@@ -299,8 +295,14 @@ mod tests {
 
     #[test]
     fn test_schema_type_from_str() {
-        assert_eq!(DebeziumSchemaType::from_str("struct"), DebeziumSchemaType::Struct);
-        assert_eq!(DebeziumSchemaType::from_str("int32"), DebeziumSchemaType::Int32);
+        assert_eq!(
+            DebeziumSchemaType::from_str("struct"),
+            DebeziumSchemaType::Struct
+        );
+        assert_eq!(
+            DebeziumSchemaType::from_str("int32"),
+            DebeziumSchemaType::Int32
+        );
         assert_eq!(
             DebeziumSchemaType::from_str("unknown_type"),
             DebeziumSchemaType::Unknown("unknown_type".to_string())
@@ -333,7 +335,12 @@ mod tests {
             ("json", DebeziumSchemaType::Json),
         ];
         for (s, expected) in &cases {
-            assert_eq!(DebeziumSchemaType::from_str(s), *expected, "failed for '{}'", s);
+            assert_eq!(
+                DebeziumSchemaType::from_str(s),
+                *expected,
+                "failed for '{}'",
+                s
+            );
         }
     }
 
@@ -373,7 +380,10 @@ mod tests {
     fn test_schema_type_as_str() {
         assert_eq!(DebeziumSchemaType::Int32.as_str(), "int32");
         assert_eq!(DebeziumSchemaType::Struct.as_str(), "struct");
-        assert_eq!(DebeziumSchemaType::Unknown("custom".to_string()).as_str(), "custom");
+        assert_eq!(
+            DebeziumSchemaType::Unknown("custom".to_string()).as_str(),
+            "custom"
+        );
     }
 
     #[test]
@@ -415,8 +425,7 @@ mod tests {
 
     #[test]
     fn test_field_with_version() {
-        let field = DebeziumField::string("name")
-            .with_version(3);
+        let field = DebeziumField::string("name").with_version(3);
         assert_eq!(field.version, Some(3));
     }
 
@@ -431,7 +440,10 @@ mod tests {
         assert_eq!(field.optional, Some(true));
         assert_eq!(field.name.as_deref(), Some("io.opencdc.public.users.name"));
         assert_eq!(field.doc.as_deref(), Some("The user's display name"));
-        assert_eq!(field.parameters.as_ref().unwrap().get("version").unwrap(), "2");
+        assert_eq!(
+            field.parameters.as_ref().unwrap().get("version").unwrap(),
+            "2"
+        );
     }
 
     #[test]

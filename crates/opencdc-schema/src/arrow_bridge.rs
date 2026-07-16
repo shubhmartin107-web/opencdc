@@ -21,10 +21,7 @@ impl SchemaBridge {
         DebeziumSchema {
             schema_type: DebeziumSchemaType::Struct,
             fields: Some(fields),
-            name: schema
-                .metadata()
-                .get("debezium.name")
-                .cloned(),
+            name: schema.metadata().get("debezium.name").cloned(),
             ..Default::default()
         }
     }
@@ -42,9 +39,7 @@ impl SchemaBridge {
             DataType::Float16 | DataType::Float32 => DebeziumSchemaType::Float,
             DataType::Float64 => DebeziumSchemaType::Double,
             DataType::Boolean => DebeziumSchemaType::Boolean,
-            DataType::Utf8 | DataType::Utf8View | DataType::LargeUtf8 => {
-                DebeziumSchemaType::String
-            }
+            DataType::Utf8 | DataType::Utf8View | DataType::LargeUtf8 => DebeziumSchemaType::String,
             DataType::Binary | DataType::LargeBinary | DataType::FixedSizeBinary(_) => {
                 DebeziumSchemaType::Bytes
             }
@@ -58,9 +53,7 @@ impl SchemaBridge {
             | DataType::Timestamp(TimeUnit::Second, _) => DebeziumSchemaType::Timestamp,
             DataType::Timestamp(TimeUnit::Microsecond, _) => DebeziumSchemaType::MicroTimestamp,
             DataType::Timestamp(TimeUnit::Nanosecond, _) => DebeziumSchemaType::NanoTimestamp,
-            DataType::Decimal128(_, _) | DataType::Decimal256(_, _) => {
-                DebeziumSchemaType::Decimal
-            }
+            DataType::Decimal128(_, _) | DataType::Decimal256(_, _) => DebeziumSchemaType::Decimal,
             DataType::Struct(_) => DebeziumSchemaType::Struct,
             DataType::List(_) | DataType::LargeList(_) | DataType::FixedSizeList(_, _) => {
                 DebeziumSchemaType::Array
@@ -87,23 +80,18 @@ impl SchemaBridge {
             field_name: field.name().clone(),
             field_type: serde_json::Value::String(debezium_type.as_str().to_string()),
             fields: match field.data_type() {
-                DataType::Struct(inner_fields) => {
-                    Some(
-                        inner_fields
-                            .iter()
-                            .map(|f| Self::arrow_field_to_debezium(f))
-                            .collect(),
-                    )
-                }
+                DataType::Struct(inner_fields) => Some(
+                    inner_fields
+                        .iter()
+                        .map(|f| Self::arrow_field_to_debezium(f))
+                        .collect(),
+                ),
                 _ => None,
             },
             optional: Some(nullable),
             name: None,
             version: None,
-            doc: field
-                .metadata()
-                .get("doc")
-                .cloned(),
+            doc: field.metadata().get("doc").cloned(),
             parameters,
             default: None,
         }
@@ -152,9 +140,6 @@ mod tests {
         let rt_fields = roundtripped.fields.as_ref().unwrap();
         assert_eq!(orig_fields.len(), rt_fields.len());
         assert_eq!(orig_fields[0].field_name, rt_fields[0].field_name);
-        assert_eq!(
-            orig_fields[0].resolve_type(),
-            rt_fields[0].resolve_type()
-        );
+        assert_eq!(orig_fields[0].resolve_type(), rt_fields[0].resolve_type());
     }
 }

@@ -47,11 +47,9 @@ impl Sink for StdoutSink {
     async fn write(&mut self, events: &[ChangeEvent]) -> PipelineResult<()> {
         for event in events {
             let line = if self.pretty {
-                serde_json::to_string_pretty(event)
-                    .unwrap_or_else(|_| "{}".to_string())
+                serde_json::to_string_pretty(event).unwrap_or_else(|_| "{}".to_string())
             } else {
-                serde_json::to_string(event)
-                    .unwrap_or_else(|_| "{}".to_string())
+                serde_json::to_string(event).unwrap_or_else(|_| "{}".to_string())
             };
             println!("{}", line);
         }
@@ -92,8 +90,8 @@ impl Sink for NullSink {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use opencdc_core::source_info::SourceInfo;
     use opencdc_core::ConnectorType;
+    use opencdc_core::source_info::SourceInfo;
 
     #[tokio::test]
     async fn test_null_sink_counts_events() {

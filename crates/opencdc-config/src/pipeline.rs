@@ -8,26 +8,30 @@ pub struct PipelineConfig {
 
 impl PipelineConfig {
     pub fn from_raw(value: toml::Value) -> Result<Self> {
-        let table = value.as_table().ok_or_else(|| {
-            Error::Other("pipeline config must be a table".to_string())
-        })?;
+        let table = value
+            .as_table()
+            .ok_or_else(|| Error::Other("pipeline config must be a table".to_string()))?;
 
         let transforms = match table.get("transforms") {
             Some(v) => {
-                let arr = v.as_array().ok_or_else(|| {
-                    Error::Other("transforms must be an array".to_string())
-                })?;
-                arr.iter().map(|v| TransformConfig::from_raw(v.clone())).collect::<Result<Vec<_>>>()?
+                let arr = v
+                    .as_array()
+                    .ok_or_else(|| Error::Other("transforms must be an array".to_string()))?;
+                arr.iter()
+                    .map(|v| TransformConfig::from_raw(v.clone()))
+                    .collect::<Result<Vec<_>>>()?
             }
             None => Vec::new(),
         };
 
         let sinks = match table.get("sinks") {
             Some(v) => {
-                let arr = v.as_array().ok_or_else(|| {
-                    Error::Other("sinks must be an array".to_string())
-                })?;
-                arr.iter().map(|v| SinkConfig::from_raw(v.clone())).collect::<Result<Vec<_>>>()?
+                let arr = v
+                    .as_array()
+                    .ok_or_else(|| Error::Other("sinks must be an array".to_string()))?;
+                arr.iter()
+                    .map(|v| SinkConfig::from_raw(v.clone()))
+                    .collect::<Result<Vec<_>>>()?
             }
             None => Vec::new(),
         };
@@ -45,23 +49,25 @@ pub enum TransformConfig {
 
 impl TransformConfig {
     pub fn from_raw(value: toml::Value) -> Result<Self> {
-        let table = value.as_table().ok_or_else(|| {
-            Error::Other("transform config must be a table".to_string())
-        })?;
-        let ty = table.get("type").and_then(|v| v.as_str())
+        let table = value
+            .as_table()
+            .ok_or_else(|| Error::Other("transform config must be a table".to_string()))?;
+        let ty = table
+            .get("type")
+            .and_then(|v| v.as_str())
             .ok_or_else(|| Error::Other("transform missing 'type'".to_string()))?;
         match ty {
             "log" => Ok(Self::Log),
             "filter" => {
-                let cfg: FilterTransformConfig = value.try_into().map_err(|e| {
-                    Error::Other(format!("invalid filter config: {}", e))
-                })?;
+                let cfg: FilterTransformConfig = value
+                    .try_into()
+                    .map_err(|e| Error::Other(format!("invalid filter config: {}", e)))?;
                 Ok(Self::Filter(cfg))
             }
             "rename" => {
-                let cfg: RenameTransformConfig = value.try_into().map_err(|e| {
-                    Error::Other(format!("invalid rename config: {}", e))
-                })?;
+                let cfg: RenameTransformConfig = value
+                    .try_into()
+                    .map_err(|e| Error::Other(format!("invalid rename config: {}", e)))?;
                 Ok(Self::Rename(cfg))
             }
             other => Err(Error::Other(format!("unknown transform type '{}'", other))),
@@ -98,18 +104,20 @@ pub enum SinkConfig {
 
 impl SinkConfig {
     pub fn from_raw(value: toml::Value) -> Result<Self> {
-        let table = value.as_table().ok_or_else(|| {
-            Error::Other("sink config must be a table".to_string())
-        })?;
-        let ty = table.get("type").and_then(|v| v.as_str())
+        let table = value
+            .as_table()
+            .ok_or_else(|| Error::Other("sink config must be a table".to_string()))?;
+        let ty = table
+            .get("type")
+            .and_then(|v| v.as_str())
             .ok_or_else(|| Error::Other("sink missing 'type'".to_string()))?;
         match ty {
             "stdout" => Ok(Self::Stdout),
             "null" => Ok(Self::Null),
             "openlake" => {
-                let cfg: OpenLakeSinkConfig = value.try_into().map_err(|e| {
-                    Error::Other(format!("invalid openlake config: {}", e))
-                })?;
+                let cfg: OpenLakeSinkConfig = value
+                    .try_into()
+                    .map_err(|e| Error::Other(format!("invalid openlake config: {}", e)))?;
                 Ok(Self::OpenLake(cfg))
             }
             other => Err(Error::Other(format!("unknown sink type '{}'", other))),

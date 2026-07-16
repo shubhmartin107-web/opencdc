@@ -83,9 +83,9 @@ impl DebeziumEventBuilder {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use opencdc_core::ConnectorType;
     use opencdc_core::operation::Operation;
     use opencdc_core::schema::{DebeziumField, DebeziumSchemaType};
-    use opencdc_core::ConnectorType;
 
     #[test]
     fn test_json_serialize_to_string_pretty() {
@@ -135,8 +135,8 @@ mod tests {
 
     #[test]
     fn test_debezium_envelope_format() {
-        let source = SourceInfo::new(&ConnectorType::Mysql, "mydb", None::<&str>, "orders")
-            .with_lsn(99999);
+        let source =
+            SourceInfo::new(&ConnectorType::Mysql, "mydb", None::<&str>, "orders").with_lsn(99999);
         let after = serde_json::json!({"order_id": 42, "amount": 100.50});
         let event = DebeziumEventBuilder::create_event(after, source, None);
 
@@ -153,11 +153,8 @@ mod tests {
     fn test_builder_methods() {
         let source = SourceInfo::new(&ConnectorType::Postgres, "db", Some("public"), "t");
 
-        let create = DebeziumEventBuilder::create_event(
-            serde_json::json!({"id": 1}),
-            source.clone(),
-            None,
-        );
+        let create =
+            DebeziumEventBuilder::create_event(serde_json::json!({"id": 1}), source.clone(), None);
         assert_eq!(create.payload.op, Operation::Create);
 
         let update = DebeziumEventBuilder::update_event(
@@ -168,18 +165,11 @@ mod tests {
         );
         assert_eq!(update.payload.op, Operation::Update);
 
-        let delete = DebeziumEventBuilder::delete_event(
-            serde_json::json!({"id": 1}),
-            source.clone(),
-            None,
-        );
+        let delete =
+            DebeziumEventBuilder::delete_event(serde_json::json!({"id": 1}), source.clone(), None);
         assert_eq!(delete.payload.op, Operation::Delete);
 
-        let snap = DebeziumEventBuilder::snapshot_event(
-            serde_json::json!({"id": 1}),
-            source,
-            None,
-        );
+        let snap = DebeziumEventBuilder::snapshot_event(serde_json::json!({"id": 1}), source, None);
         assert_eq!(snap.payload.op, Operation::Read);
     }
 }

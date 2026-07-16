@@ -1,5 +1,5 @@
-use opencdc_core::offset::ConnectorOffset;
 use opencdc_core::ConnectorType;
+use opencdc_core::offset::ConnectorOffset;
 
 #[derive(Debug, Clone)]
 pub struct ConnectorConfig {

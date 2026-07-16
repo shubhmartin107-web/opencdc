@@ -53,13 +53,16 @@ impl AppState {
             .and_then(|s| s.parse::<usize>().ok())
             .unwrap_or(10);
 
-        let schema_registry_client = std::env::var("OPENCDC_SCHEMA_REGISTRY_URL").ok().map(|url| {
-            SchemaRegistryClient::new(SchemaRegistryConfig {
-                url,
-                auth_token: std::env::var("OPENCDC_SCHEMA_REGISTRY_TOKEN").ok(),
-                timeout_secs: 10,
+        let schema_registry_client = std::env::var("OPENCDC_SCHEMA_REGISTRY_URL")
+            .ok()
+            .map(|url| {
+                SchemaRegistryClient::new(SchemaRegistryConfig {
+                    url,
+                    auth_token: std::env::var("OPENCDC_SCHEMA_REGISTRY_TOKEN").ok(),
+                    timeout_secs: 10,
+                })
             })
-        }).and_then(|r| r.ok());
+            .and_then(|r| r.ok());
 
         Self {
             connectors: RwLock::new(HashMap::new()),
@@ -75,13 +78,15 @@ impl AppState {
 
     pub async fn register_connector(&self, name: &str) {
         let mut connectors = self.connectors.write().await;
-        connectors.entry(name.to_string()).or_insert(ManagedConnector {
-            config: None,
-            status: ConnectorStatus::Stopped,
-            offset: None,
-            events_received: 0,
-            error: None,
-        });
+        connectors
+            .entry(name.to_string())
+            .or_insert(ManagedConnector {
+                config: None,
+                status: ConnectorStatus::Stopped,
+                offset: None,
+                events_received: 0,
+                error: None,
+            });
     }
 
     pub async fn update_status(&self, name: &str, status: ConnectorStatus) {
@@ -92,7 +97,8 @@ impl AppState {
     }
 
     pub async fn increment_events_received(&self, name: &str, count: u64) {
-        self.total_events_received.fetch_add(count, Ordering::Relaxed);
+        self.total_events_received
+            .fetch_add(count, Ordering::Relaxed);
         let mut connectors = self.connectors.write().await;
         if let Some(c) = connectors.get_mut(name) {
             c.events_received = c.events_received.saturating_add(count);
@@ -120,8 +126,16 @@ impl AppState {
     pub async fn health_status(&self) -> HealthStatus {
         let connectors = self.connectors.read().await;
         let total_connectors = connectors.len() as u64;
-        let running = connectors.values().filter(|c| c.status == ConnectorStatus::Streaming || c.status == ConnectorStatus::Running).count() as u64;
-        let errors = connectors.values().filter(|c| matches!(c.status, ConnectorStatus::Error(_))).count() as u64;
+        let running = connectors
+            .values()
+            .filter(|c| {
+                c.status == ConnectorStatus::Streaming || c.status == ConnectorStatus::Running
+            })
+            .count() as u64;
+        let errors = connectors
+            .values()
+            .filter(|c| matches!(c.status, ConnectorStatus::Error(_)))
+            .count() as u64;
 
         HealthStatus {
             uptime_seconds: self.start_time.elapsed().as_secs(),
@@ -131,7 +145,11 @@ impl AppState {
             total_events_received: self.total_events_received.load(Ordering::Relaxed),
             total_events_sent: self.total_events_sent.load(Ordering::Relaxed),
             total_errors: self.total_errors.load(Ordering::Relaxed),
-            status: if errors > 0 { "degraded".to_string() } else { "healthy".to_string() },
+            status: if errors > 0 {
+                "degraded".to_string()
+            } else {
+                "healthy".to_string()
+            },
         }
     }
 
@@ -141,7 +159,9 @@ impl AppState {
 
     pub async fn run_snapshot(state: &Arc<Self>, connector_name: &str, tables: Vec<String>) {
         let name = connector_name.to_string();
-        state.update_status(&name, ConnectorStatus::Snapshotting).await;
+        state
+            .update_status(&name, ConnectorStatus::Snapshotting)
+            .await;
 
         let this = state.clone();
         tokio::spawn(async move {
@@ -152,7 +172,8 @@ impl AppState {
                 c.events_received = c.events_received.saturating_add(count);
                 c.status = ConnectorStatus::Running;
                 c.offset = Some(ConnectorOffset::snapshot_done());
-                this.total_events_received.fetch_add(count, Ordering::Relaxed);
+                this.total_events_received
+                    .fetch_add(count, Ordering::Relaxed);
             }
         });
     }
@@ -193,7 +214,10 @@ mod tests {
     fn test_connector_status_variants() {
         assert_ne!(format!("{:?}", ConnectorStatus::Stopped), "");
         assert_ne!(format!("{:?}", ConnectorStatus::Running), "");
-        assert_ne!(format!("{:?}", ConnectorStatus::Error("err".to_string())), "");
+        assert_ne!(
+            format!("{:?}", ConnectorStatus::Error("err".to_string())),
+            ""
+        );
     }
 
     #[test]
@@ -237,7 +261,9 @@ mod tests {
     async fn test_app_state_update_status() {
         let state = AppState::new();
         state.register_connector("pg").await;
-        state.update_status("pg", ConnectorStatus::Snapshotting).await;
+        state
+            .update_status("pg", ConnectorStatus::Snapshotting)
+            .await;
 
         let connectors = state.connectors.read().await;
         let mc = connectors.get("pg").unwrap();
@@ -247,7 +273,9 @@ mod tests {
     #[tokio::test]
     async fn test_app_state_update_status_nonexistent() {
         let state = AppState::new();
-        state.update_status("nonexistent", ConnectorStatus::Running).await;
+        state
+            .update_status("nonexistent", ConnectorStatus::Running)
+            .await;
         // Should not panic
     }
 
@@ -264,7 +292,9 @@ mod tests {
         state.register_connector("c1").await;
         state.register_connector("c2").await;
         state.update_status("c1", ConnectorStatus::Streaming).await;
-        state.update_status("c2", ConnectorStatus::Snapshotting).await;
+        state
+            .update_status("c2", ConnectorStatus::Snapshotting)
+            .await;
 
         state.shutdown_all().await;
 
@@ -290,7 +320,9 @@ mod tests {
     #[test]
     fn test_app_state_default() {
         let state = AppState::default();
-        let list = tokio::runtime::Runtime::new().unwrap().block_on(state.list_connectors());
+        let list = tokio::runtime::Runtime::new()
+            .unwrap()
+            .block_on(state.list_connectors());
         assert!(list.is_empty());
     }
 }

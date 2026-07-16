@@ -1,10 +1,10 @@
 use tokio_postgres::Client;
 
+use opencdc_core::ConnectorType;
 use opencdc_core::change_event::ChangeEvent;
 use opencdc_core::error::{Error, Result};
 use opencdc_core::offset::ConnectorOffset;
 use opencdc_core::source_info::SourceInfo;
-use opencdc_core::ConnectorType;
 
 use super::config::PostgresConnectorConfig;
 use super::decoder::{PgOutputDecoder, PgOutputMessage};

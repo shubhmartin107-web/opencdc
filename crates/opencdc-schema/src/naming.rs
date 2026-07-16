@@ -10,7 +10,12 @@ impl DebeziumNaming {
         }
     }
 
-    pub fn table_schema_name(connector: &ConnectorType, db: &str, schema: Option<&str>, table: &str) -> String {
+    pub fn table_schema_name(
+        connector: &ConnectorType,
+        db: &str,
+        schema: Option<&str>,
+        table: &str,
+    ) -> String {
         let prefix = format!("{}.{}", connector.as_str(), db);
         match schema {
             Some(s) => format!("{}.{}.{}", prefix, s, table),
@@ -18,14 +23,24 @@ impl DebeziumNaming {
         }
     }
 
-    pub fn envelope_name(connector: &ConnectorType, db: &str, schema: Option<&str>, table: &str) -> String {
+    pub fn envelope_name(
+        connector: &ConnectorType,
+        db: &str,
+        schema: Option<&str>,
+        table: &str,
+    ) -> String {
         format!(
             "{}.Envelope",
             Self::table_schema_name(connector, db, schema, table)
         )
     }
 
-    pub fn key_name(connector: &ConnectorType, db: &str, schema: Option<&str>, table: &str) -> String {
+    pub fn key_name(
+        connector: &ConnectorType,
+        db: &str,
+        schema: Option<&str>,
+        table: &str,
+    ) -> String {
         format!(
             "{}.Key",
             Self::table_schema_name(connector, db, schema, table)
@@ -33,10 +48,7 @@ impl DebeziumNaming {
     }
 
     pub fn source_name(connector: &ConnectorType) -> String {
-        format!(
-            "io.debezium.connector.{}.Source",
-            connector.as_str()
-        )
+        format!("io.debezium.connector.{}.Source", connector.as_str())
     }
 
     pub fn subject_name(prefix: &str, schema: Option<&str>, table: &str, suffix: &str) -> String {

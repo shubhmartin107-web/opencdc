@@ -62,18 +62,19 @@ async fn handle_health_request(stream: &mut tokio::net::TcpStream, state: &AppSt
         return;
     }
 
-    let (status_code, status_text, body, content_type) = if request.starts_with("GET /health ") || request.starts_with("GET /health\r\n") {
-        let health = state.health_status().await;
-        let body = serde_json::to_string_pretty(&health).unwrap_or_default();
-        if health.status == "healthy" {
-            (200, "OK", body, "application/json")
-        } else {
-            (503, "Service Unavailable", body, "application/json")
-        }
-    } else if request.starts_with("GET /metrics ") || request.starts_with("GET /metrics\r\n") {
-        let health = state.health_status().await;
-        let metrics = format!(
-            "# HELP opencdc_events_received Total events received\n\
+    let (status_code, status_text, body, content_type) =
+        if request.starts_with("GET /health ") || request.starts_with("GET /health\r\n") {
+            let health = state.health_status().await;
+            let body = serde_json::to_string_pretty(&health).unwrap_or_default();
+            if health.status == "healthy" {
+                (200, "OK", body, "application/json")
+            } else {
+                (503, "Service Unavailable", body, "application/json")
+            }
+        } else if request.starts_with("GET /metrics ") || request.starts_with("GET /metrics\r\n") {
+            let health = state.health_status().await;
+            let metrics = format!(
+                "# HELP opencdc_events_received Total events received\n\
              # TYPE opencdc_events_received counter\n\
              opencdc_events_received {}\n\
              # HELP opencdc_events_sent Total events sent to sinks\n\
@@ -88,17 +89,17 @@ async fn handle_health_request(stream: &mut tokio::net::TcpStream, state: &AppSt
              # HELP opencdc_uptime_seconds Server uptime in seconds\n\
              # TYPE opencdc_uptime_seconds gauge\n\
              opencdc_uptime_seconds {}\n",
-            health.total_events_received,
-            health.total_events_sent,
-            health.total_errors,
-            health.running_connectors,
-            health.uptime_seconds,
-        );
-        (200, "OK", metrics, "text/plain; charset=utf-8")
-    } else {
-        let body = json_error("not_found", "the requested endpoint does not exist");
-        (404, "Not Found", body, "application/json")
-    };
+                health.total_events_received,
+                health.total_events_sent,
+                health.total_errors,
+                health.running_connectors,
+                health.uptime_seconds,
+            );
+            (200, "OK", metrics, "text/plain; charset=utf-8")
+        } else {
+            let body = json_error("not_found", "the requested endpoint does not exist");
+            (404, "Not Found", body, "application/json")
+        };
 
     let response = format!(
         "HTTP/1.1 {status_code} {status_text}\r\n\

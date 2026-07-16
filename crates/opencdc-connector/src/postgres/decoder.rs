@@ -483,7 +483,10 @@ mod tests {
     }
 
     fn build_relation_packet(
-        oid: u32, schema: &str, table: &str, cols: &[(&str, u32, i32)],
+        oid: u32,
+        schema: &str,
+        table: &str,
+        cols: &[(&str, u32, i32)],
     ) -> Vec<u8> {
         let mut buf = vec![b'R'];
         buf.extend_from_slice(&(oid as i32).to_be_bytes());

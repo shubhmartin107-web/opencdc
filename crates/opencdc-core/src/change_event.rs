@@ -45,10 +45,7 @@ impl ChangeEvent {
         self
     }
 
-    pub fn create(
-        after: serde_json::Value,
-        source: SourceInfo,
-    ) -> Self {
+    pub fn create(after: serde_json::Value, source: SourceInfo) -> Self {
         Self::new(ChangePayload {
             before: None,
             after: Some(after),
@@ -74,10 +71,7 @@ impl ChangeEvent {
         })
     }
 
-    pub fn delete(
-        before: serde_json::Value,
-        source: SourceInfo,
-    ) -> Self {
+    pub fn delete(before: serde_json::Value, source: SourceInfo) -> Self {
         Self::new(ChangePayload {
             before: Some(before),
             after: None,
@@ -88,10 +82,7 @@ impl ChangeEvent {
         })
     }
 
-    pub fn snapshot(
-        after: serde_json::Value,
-        source: SourceInfo,
-    ) -> Self {
+    pub fn snapshot(after: serde_json::Value, source: SourceInfo) -> Self {
         Self::new(ChangePayload {
             before: None,
             after: Some(after),
@@ -116,7 +107,10 @@ impl ChangeEvent {
 
     pub fn fully_qualified_table(&self) -> String {
         match &self.payload.source.schema {
-            Some(schema) => format!("{}.{}.{}", self.payload.source.db, schema, self.payload.source.table),
+            Some(schema) => format!(
+                "{}.{}.{}",
+                self.payload.source.db, schema, self.payload.source.table
+            ),
             None => format!("{}.{}", self.payload.source.db, self.payload.source.table),
         }
     }
@@ -137,7 +131,9 @@ impl ChangeEvent {
     }
 
     pub fn event_timestamp_ms(&self) -> i64 {
-        self.payload.ts_ms.unwrap_or_else(|| chrono::Utc::now().timestamp_millis())
+        self.payload
+            .ts_ms
+            .unwrap_or_else(|| chrono::Utc::now().timestamp_millis())
     }
 }
 
@@ -226,19 +222,13 @@ mod tests {
 
     #[test]
     fn test_topic_name() {
-        let event = ChangeEvent::create(
-            serde_json::json!({"id": 1}),
-            make_source(),
-        );
+        let event = ChangeEvent::create(serde_json::json!({"id": 1}), make_source());
         assert_eq!(event.topic_name("opencdc"), "opencdc.public.users");
     }
 
     #[test]
     fn test_fully_qualified_table() {
-        let event = ChangeEvent::create(
-            serde_json::json!({"id": 1}),
-            make_source(),
-        );
+        let event = ChangeEvent::create(serde_json::json!({"id": 1}), make_source());
         assert_eq!(event.fully_qualified_table(), "testdb.public.users");
     }
 

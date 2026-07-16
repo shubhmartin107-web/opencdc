@@ -63,7 +63,9 @@ pub fn mysql_type_name(col_type: u8) -> &'static str {
         MYSQL_TYPE_NEWDECIMAL => "DECIMAL",
         MYSQL_TYPE_ENUM => "ENUM",
         MYSQL_TYPE_SET => "SET",
-        MYSQL_TYPE_BLOB | MYSQL_TYPE_TINY_BLOB | MYSQL_TYPE_MEDIUM_BLOB | MYSQL_TYPE_LONG_BLOB => "BLOB",
+        MYSQL_TYPE_BLOB | MYSQL_TYPE_TINY_BLOB | MYSQL_TYPE_MEDIUM_BLOB | MYSQL_TYPE_LONG_BLOB => {
+            "BLOB"
+        }
         MYSQL_TYPE_STRING => "CHAR",
         MYSQL_TYPE_GEOMETRY => "GEOMETRY",
         _ => "UNKNOWN",
@@ -119,11 +121,14 @@ pub fn decode_binlog_value(data: &[u8], col_type: u8, meta: u16) -> Value {
             let d = days as i64 - 365 - 1;
             let year = (d * 100 + 50) / 36525 + 1970;
             let yday = d - ((year - 1970) * 365 + (year - 1969) / 4);
-            Value::String(format!("{}-{:02}-{:02}", year, yday / 30 + 1, yday % 30 + 1))
+            Value::String(format!(
+                "{}-{:02}-{:02}",
+                year,
+                yday / 30 + 1,
+                yday % 30 + 1
+            ))
         }
-        MYSQL_TYPE_DATETIME => {
-            decode_datetime(data, false)
-        }
+        MYSQL_TYPE_DATETIME => decode_datetime(data, false),
         MYSQL_TYPE_DATETIME2 => {
             let frac = (meta & 0xff) as u8;
             decode_datetime2(data, frac)
@@ -132,9 +137,7 @@ pub fn decode_binlog_value(data: &[u8], col_type: u8, meta: u16) -> Value {
             let secs = u32::from_le_bytes([data[0], data[1], data[2], data[3]]);
             Value::Number(serde_json::Number::from(secs as i64))
         }
-        MYSQL_TYPE_TIMESTAMP2 => {
-            decode_timestamp2(data, meta)
-        }
+        MYSQL_TYPE_TIMESTAMP2 => decode_timestamp2(data, meta),
         MYSQL_TYPE_STRING | MYSQL_TYPE_VARCHAR | MYSQL_TYPE_VAR_STRING => {
             let (_, s) = decode_length_encoded_string(data);
             Value::String(s)
@@ -159,15 +162,9 @@ pub fn decode_binlog_value(data: &[u8], col_type: u8, meta: u16) -> Value {
             let json_str = String::from_utf8_lossy(data).into_owned();
             serde_json::from_str(&json_str).unwrap_or_else(|_| Value::String(json_str))
         }
-        MYSQL_TYPE_ENUM | MYSQL_TYPE_SET => {
-            Value::Number(serde_json::Number::from(data[0]))
-        }
-        MYSQL_TYPE_NEWDECIMAL => {
-            decode_decimal(data, meta)
-        }
-        MYSQL_TYPE_YEAR => {
-            Value::Number(serde_json::Number::from(data[0] as i64 + 1900))
-        }
+        MYSQL_TYPE_ENUM | MYSQL_TYPE_SET => Value::Number(serde_json::Number::from(data[0])),
+        MYSQL_TYPE_NEWDECIMAL => decode_decimal(data, meta),
+        MYSQL_TYPE_YEAR => Value::Number(serde_json::Number::from(data[0] as i64 + 1900)),
         _ => Value::String(hex::encode(data)),
     }
 }
@@ -228,7 +225,7 @@ fn decode_datetime2(data: &[u8], frac_sec: u8) -> Value {
 
     if frac_sec > 0 {
         let frac_start = 5;
-            let frac_bytes = frac_sec.div_ceil(2);
+        let frac_bytes = frac_sec.div_ceil(2);
         if data.len() >= frac_start + frac_bytes as usize {
             let mut frac = 0u64;
             for i in 0..frac_bytes as usize {

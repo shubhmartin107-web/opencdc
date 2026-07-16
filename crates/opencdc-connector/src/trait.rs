@@ -1,18 +1,18 @@
 use async_trait::async_trait;
 
+use opencdc_core::ConnectorType;
 use opencdc_core::change_event::ChangeEvent;
 use opencdc_core::error::Result;
 use opencdc_core::offset::ConnectorOffset;
-use opencdc_core::ConnectorType;
 
 use crate::config::{ConnectorConfig, SnapshotContext, StreamContext};
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use opencdc_core::ConnectorType;
     use opencdc_core::change_event::ChangeEvent;
     use opencdc_core::operation::Operation;
-use opencdc_core::ConnectorType;
 
     struct TestConnector {
         name: String,

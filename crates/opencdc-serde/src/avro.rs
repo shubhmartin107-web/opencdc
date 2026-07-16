@@ -96,9 +96,10 @@ impl AvroSchemaGenerator {
     fn convert_schema(schema: &DebeziumSchema, force_nullable: bool) -> Result<serde_json::Value> {
         match schema.schema_type {
             DebeziumSchemaType::Struct => {
-                let fields = schema.fields.as_ref().ok_or_else(|| {
-                    Error::Schema("struct schema has no fields".to_string())
-                })?;
+                let fields = schema
+                    .fields
+                    .as_ref()
+                    .ok_or_else(|| Error::Schema("struct schema has no fields".to_string()))?;
                 let avro_fields: Vec<serde_json::Value> = fields
                     .iter()
                     .map(Self::convert_field_to_avro)
@@ -114,15 +115,15 @@ impl AvroSchemaGenerator {
                 Ok(avro_type)
             }
             DebeziumSchemaType::Array => {
-                let items = schema.fields.as_ref().and_then(|f| f.first()).ok_or_else(|| {
-                    Error::Schema("array schema has no item field".to_string())
-                })?;
+                let items = schema
+                    .fields
+                    .as_ref()
+                    .and_then(|f| f.first())
+                    .ok_or_else(|| Error::Schema("array schema has no item field".to_string()))?;
                 let item_type = Self::convert_field_to_avro(items)?;
                 Ok(serde_json::json!({"type": "array", "items": item_type}))
             }
-            DebeziumSchemaType::Map => {
-                Ok(serde_json::json!({"type": "map", "values": "string"}))
-            }
+            DebeziumSchemaType::Map => Ok(serde_json::json!({"type": "map", "values": "string"})),
             ref t => Ok(Self::primitive_type_to_avro(t, force_nullable)),
         }
     }
@@ -162,8 +163,7 @@ impl AvroSchemaGenerator {
                 });
                 if let Some(params) = &field.parameters {
                     if let Some(precision) = params.get("precision") {
-                        avro_type["precision"] =
-                            serde_json::Value::String(precision.clone());
+                        avro_type["precision"] = serde_json::Value::String(precision.clone());
                     }
                     if let Some(scale) = params.get("scale") {
                         avro_type["scale"] = serde_json::Value::String(scale.clone());

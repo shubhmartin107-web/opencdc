@@ -27,60 +27,40 @@ pub fn pg_type_to_json(raw: &Bytes, type_oid: u32) -> serde_json::Value {
     let s = String::from_utf8_lossy(raw);
 
     match type_oid {
-        BOOLOID => {
-            serde_json::Value::Bool(s == "t" || s == "true")
-        }
-        INT2OID | INT4OID => {
-            s.parse::<i32>()
-                .map(serde_json::Value::from)
-                .unwrap_or(serde_json::Value::Null)
-        }
-        INT8OID | XIDOID => {
-            s.parse::<i64>()
-                .map(serde_json::Value::from)
-                .unwrap_or(serde_json::Value::Null)
-        }
-        FLOAT4OID => {
-            s.parse::<f32>()
-                .map(|v| serde_json::json!(v))
-                .unwrap_or(serde_json::Value::Null)
-        }
-        FLOAT8OID => {
-            s.parse::<f64>()
-                .map(serde_json::Value::from)
-                .unwrap_or(serde_json::Value::Null)
-        }
-        NUMERICOID => {
-            serde_json::Value::String(s.to_string())
-        }
-        TEXTOID | VARCHAROID | BPCHAROID | UUIDOID => {
-            serde_json::Value::String(s.to_string())
-        }
+        BOOLOID => serde_json::Value::Bool(s == "t" || s == "true"),
+        INT2OID | INT4OID => s
+            .parse::<i32>()
+            .map(serde_json::Value::from)
+            .unwrap_or(serde_json::Value::Null),
+        INT8OID | XIDOID => s
+            .parse::<i64>()
+            .map(serde_json::Value::from)
+            .unwrap_or(serde_json::Value::Null),
+        FLOAT4OID => s
+            .parse::<f32>()
+            .map(|v| serde_json::json!(v))
+            .unwrap_or(serde_json::Value::Null),
+        FLOAT8OID => s
+            .parse::<f64>()
+            .map(serde_json::Value::from)
+            .unwrap_or(serde_json::Value::Null),
+        NUMERICOID => serde_json::Value::String(s.to_string()),
+        TEXTOID | VARCHAROID | BPCHAROID | UUIDOID => serde_json::Value::String(s.to_string()),
         JSONOID | JSONBOID => {
             let s = s.into_owned();
             serde_json::from_str(&s).unwrap_or(serde_json::Value::String(s))
         }
-        TIMESTAMPOID | TIMESTAMPTZOID => {
-            serde_json::Value::String(s.to_string())
-        }
-        DATEOID => {
-            serde_json::Value::String(s.to_string())
-        }
-        TIMEOID | TIMETZOID => {
-            serde_json::Value::String(s.to_string())
-        }
-        BYTEAOID => {
-            serde_json::Value::String(s.to_string())
-        }
+        TIMESTAMPOID | TIMESTAMPTZOID => serde_json::Value::String(s.to_string()),
+        DATEOID => serde_json::Value::String(s.to_string()),
+        TIMEOID | TIMETZOID => serde_json::Value::String(s.to_string()),
+        BYTEAOID => serde_json::Value::String(s.to_string()),
         OIDOID => {
             let s = s.as_ref();
             s.parse::<u32>()
                 .map(|v| serde_json::json!(v))
                 .unwrap_or(serde_json::Value::Null)
         }
-        _ => {
-            serde_json::Value::String(s.to_string())
-        }
+        _ => serde_json::Value::String(s.to_string()),
     }
 }
 

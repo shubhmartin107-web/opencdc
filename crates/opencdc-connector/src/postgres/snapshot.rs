@@ -47,9 +47,7 @@ impl<'a> Snapshotter<'a> {
                 &[],
             )
             .await
-            .map_err(|e| {
-                Error::Other(format!("failed to get current WAL LSN: {}", e))
-            })?;
+            .map_err(|e| Error::Other(format!("failed to get current WAL LSN: {}", e)))?;
 
         let lsn_str: String = row.get(0);
         let parts: Vec<&str> = lsn_str.split('/').collect();
@@ -57,9 +55,8 @@ impl<'a> Snapshotter<'a> {
             let high = u32::from_str_radix(parts[0], 16).map_err(|e| {
                 Error::Other(format!("invalid LSN high part '{}': {}", parts[0], e))
             })?;
-            let low = u32::from_str_radix(parts[1], 16).map_err(|e| {
-                Error::Other(format!("invalid LSN low part '{}': {}", parts[1], e))
-            })?;
+            let low = u32::from_str_radix(parts[1], 16)
+                .map_err(|e| Error::Other(format!("invalid LSN low part '{}': {}", parts[1], e)))?;
             Ok(((high as i64) << 32) | (low as i64))
         } else {
             Err(Error::Other(format!("invalid WAL LSN format: {}", lsn_str)))
@@ -92,18 +89,13 @@ impl<'a> Snapshotter<'a> {
         let query = if col_names.is_empty() {
             format!("SELECT * FROM \"{}\"", table)
         } else {
-            format!(
-                "SELECT {} FROM \"{}\"",
-                col_names.join(", "),
-                table
-            )
+            format!("SELECT {} FROM \"{}\"", col_names.join(", "), table)
         };
 
-        let rows = self
-            .client
-            .query(&query, &[])
-            .await
-            .map_err(|e| Error::Other(format!("failed to snapshot table '{}': {}", table, e)))?;
+        let rows =
+            self.client.query(&query, &[]).await.map_err(|e| {
+                Error::Other(format!("failed to snapshot table '{}': {}", table, e))
+            })?;
 
         for row in &rows {
             let row_json = self.row_to_json(row, &columns);
@@ -139,9 +131,7 @@ impl<'a> Snapshotter<'a> {
                 &[&table],
             )
             .await
-            .map_err(|e| {
-                Error::Other(format!("failed to get columns for '{}': {}", table, e))
-            })?;
+            .map_err(|e| Error::Other(format!("failed to get columns for '{}': {}", table, e)))?;
 
         Ok(rows
             .iter()

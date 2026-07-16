@@ -80,7 +80,10 @@ mod tests {
             let json = serde_json::to_string(ct).unwrap();
             let deserialized: ConnectorType = serde_json::from_str(&json).unwrap();
             assert_eq!(*ct, deserialized);
-            assert_eq!(ct.as_str(), ConnectorType::from_str(ct.as_str()).unwrap().as_str());
+            assert_eq!(
+                ct.as_str(),
+                ConnectorType::from_str(ct.as_str()).unwrap().as_str()
+            );
         }
     }
 
@@ -99,16 +102,37 @@ mod tests {
     #[test]
     fn test_connector_type_aliases() {
         // Test all aliases
-        assert_eq!(ConnectorType::from_str("postgres"), Some(ConnectorType::Postgres));
-        assert_eq!(ConnectorType::from_str("mariadb"), Some(ConnectorType::Mysql));
-        assert_eq!(ConnectorType::from_str("mongo"), Some(ConnectorType::Mongodb));
-        assert_eq!(ConnectorType::from_str("sql_server"), Some(ConnectorType::SqlServer));
+        assert_eq!(
+            ConnectorType::from_str("postgres"),
+            Some(ConnectorType::Postgres)
+        );
+        assert_eq!(
+            ConnectorType::from_str("mariadb"),
+            Some(ConnectorType::Mysql)
+        );
+        assert_eq!(
+            ConnectorType::from_str("mongo"),
+            Some(ConnectorType::Mongodb)
+        );
+        assert_eq!(
+            ConnectorType::from_str("sql_server"),
+            Some(ConnectorType::SqlServer)
+        );
 
         // Test all primary names
-        assert_eq!(ConnectorType::from_str("oracle"), Some(ConnectorType::Oracle));
+        assert_eq!(
+            ConnectorType::from_str("oracle"),
+            Some(ConnectorType::Oracle)
+        );
         assert_eq!(ConnectorType::from_str("db2"), Some(ConnectorType::Db2));
-        assert_eq!(ConnectorType::from_str("cassandra"), Some(ConnectorType::Cassandra));
-        assert_eq!(ConnectorType::from_str("vitess"), Some(ConnectorType::Vitess));
+        assert_eq!(
+            ConnectorType::from_str("cassandra"),
+            Some(ConnectorType::Cassandra)
+        );
+        assert_eq!(
+            ConnectorType::from_str("vitess"),
+            Some(ConnectorType::Vitess)
+        );
     }
 
     #[test]
@@ -134,14 +158,35 @@ mod tests {
     #[test]
     fn test_all_connector_types_class_names() {
         let types = [
-            (ConnectorType::Postgres, "io.debezium.connector.postgresql.PostgresConnector"),
-            (ConnectorType::Mysql, "io.debezium.connector.mysql.MySqlConnector"),
-            (ConnectorType::Mongodb, "io.debezium.connector.mongodb.MongoDbConnector"),
-            (ConnectorType::SqlServer, "io.debezium.connector.sqlserver.SqlServerConnector"),
-            (ConnectorType::Oracle, "io.debezium.connector.oracle.OracleConnector"),
+            (
+                ConnectorType::Postgres,
+                "io.debezium.connector.postgresql.PostgresConnector",
+            ),
+            (
+                ConnectorType::Mysql,
+                "io.debezium.connector.mysql.MySqlConnector",
+            ),
+            (
+                ConnectorType::Mongodb,
+                "io.debezium.connector.mongodb.MongoDbConnector",
+            ),
+            (
+                ConnectorType::SqlServer,
+                "io.debezium.connector.sqlserver.SqlServerConnector",
+            ),
+            (
+                ConnectorType::Oracle,
+                "io.debezium.connector.oracle.OracleConnector",
+            ),
             (ConnectorType::Db2, "io.debezium.connector.db2.Db2Connector"),
-            (ConnectorType::Cassandra, "io.debezium.connector.cassandra.CassandraConnector"),
-            (ConnectorType::Vitess, "io.debezium.connector.vitess.VitessConnector"),
+            (
+                ConnectorType::Cassandra,
+                "io.debezium.connector.cassandra.CassandraConnector",
+            ),
+            (
+                ConnectorType::Vitess,
+                "io.debezium.connector.vitess.VitessConnector",
+            ),
         ];
         for (ct, expected) in &types {
             assert_eq!(ct.debezium_class_name(), *expected);

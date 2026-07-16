@@ -35,7 +35,10 @@ impl Operation {
     }
 
     pub fn is_dml(&self) -> bool {
-        matches!(self, Operation::Create | Operation::Update | Operation::Delete)
+        matches!(
+            self,
+            Operation::Create | Operation::Update | Operation::Delete
+        )
     }
 
     pub fn is_snapshot(&self) -> bool {
@@ -56,9 +59,12 @@ impl Serialize for Operation {
 impl<'de> Deserialize<'de> for Operation {
     fn deserialize<D: Deserializer<'de>>(deserializer: D) -> std::result::Result<Self, D::Error> {
         let s = String::deserialize(deserializer)?;
-        Operation::from_str(&s).ok_or_else(|| serde::de::Error::custom(format!(
-            "invalid operation '{}', expected one of: c, u, d, r, t, m", s
-        )))
+        Operation::from_str(&s).ok_or_else(|| {
+            serde::de::Error::custom(format!(
+                "invalid operation '{}', expected one of: c, u, d, r, t, m",
+                s
+            ))
+        })
     }
 }
 

@@ -1,12 +1,12 @@
 use futures::TryStreamExt;
-use mongodb::bson::Document;
 use mongodb::Client;
+use mongodb::bson::Document;
 
+use opencdc_core::ConnectorType;
 use opencdc_core::change_event::ChangeEvent;
 use opencdc_core::error::{Error, Result};
 use opencdc_core::offset::ConnectorOffset;
 use opencdc_core::source_info::SourceInfo;
-use opencdc_core::ConnectorType;
 
 use super::config::MongoDbConnectorConfig;
 
@@ -91,15 +91,9 @@ fn bson_value_to_json(bv: &mongodb::bson::Bson) -> serde_json::Value {
         mongodb::bson::Bson::Null => serde_json::Value::Null,
         mongodb::bson::Bson::Int32(v) => serde_json::json!(v),
         mongodb::bson::Bson::Int64(v) => serde_json::json!(v),
-        mongodb::bson::Bson::DateTime(dt) => {
-            serde_json::Value::String(dt.to_string())
-        }
-        mongodb::bson::Bson::ObjectId(oid) => {
-            serde_json::Value::String(oid.to_hex())
-        }
-        mongodb::bson::Bson::Binary(bin) => {
-            serde_json::Value::String(hex::encode(&bin.bytes))
-        }
+        mongodb::bson::Bson::DateTime(dt) => serde_json::Value::String(dt.to_string()),
+        mongodb::bson::Bson::ObjectId(oid) => serde_json::Value::String(oid.to_hex()),
+        mongodb::bson::Bson::Binary(bin) => serde_json::Value::String(hex::encode(&bin.bytes)),
         _ => serde_json::Value::String(format!("{:?}", bv)),
     }
 }
@@ -157,7 +151,10 @@ mod tests {
 
     #[test]
     fn test_bson_value_to_json_null() {
-        assert_eq!(super::bson_value_to_json(&mongodb::bson::Bson::Null), serde_json::Value::Null);
+        assert_eq!(
+            super::bson_value_to_json(&mongodb::bson::Bson::Null),
+            serde_json::Value::Null
+        );
     }
 
     #[test]
@@ -178,7 +175,10 @@ mod tests {
     #[test]
     fn test_bson_doc_to_json_binary() {
         use mongodb::bson::Binary;
-        let bin = Binary { bytes: vec![0x01, 0x02, 0x03], subtype: mongodb::bson::spec::BinarySubtype::Generic };
+        let bin = Binary {
+            bytes: vec![0x01, 0x02, 0x03],
+            subtype: mongodb::bson::spec::BinarySubtype::Generic,
+        };
         let doc = doc! { "data": mongodb::bson::Bson::Binary(bin) };
 
         let json = bson_doc_to_json(&doc);

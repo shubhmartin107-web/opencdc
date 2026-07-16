@@ -7,10 +7,7 @@ pub struct MongoDbConnectorConfig {
 }
 
 impl MongoDbConnectorConfig {
-    pub fn new(
-        connection_string: impl Into<String>,
-        database: impl Into<String>,
-    ) -> Self {
+    pub fn new(connection_string: impl Into<String>, database: impl Into<String>) -> Self {
         Self {
             connection_string: connection_string.into(),
             database: database.into(),

@@ -112,7 +112,12 @@ impl BinlogClient {
         packet.extend_from_slice(args);
 
         let len = packet.len() as u32;
-        let header = [(len & 0xff) as u8, ((len >> 8) & 0xff) as u8, ((len >> 16) & 0xff) as u8, 0];
+        let header = [
+            (len & 0xff) as u8,
+            ((len >> 8) & 0xff) as u8,
+            ((len >> 16) & 0xff) as u8,
+            0,
+        ];
         self.stream
             .write_all(&header)
             .await
@@ -134,7 +139,10 @@ impl BinlogClient {
 
         let protocol_version = greeting[0];
         if protocol_version != 10 {
-            return Err(format!("unsupported protocol version: {}", protocol_version));
+            return Err(format!(
+                "unsupported protocol version: {}",
+                protocol_version
+            ));
         }
 
         let mut pos = 1;
@@ -143,8 +151,12 @@ impl BinlogClient {
         }
         pos += 1;
 
-        let _connection_id =
-            u32::from_le_bytes([greeting[pos], greeting[pos + 1], greeting[pos + 2], greeting[pos + 3]]);
+        let _connection_id = u32::from_le_bytes([
+            greeting[pos],
+            greeting[pos + 1],
+            greeting[pos + 2],
+            greeting[pos + 3],
+        ]);
         pos += 4;
 
         let auth_plugin_data_part1 = &greeting[pos..pos + 8];
@@ -153,19 +165,16 @@ impl BinlogClient {
         let _filler = greeting[pos];
         pos += 1;
 
-        let _capability_flags_1 =
-            u16::from_le_bytes([greeting[pos], greeting[pos + 1]]);
+        let _capability_flags_1 = u16::from_le_bytes([greeting[pos], greeting[pos + 1]]);
         pos += 2;
 
         let _character_set = greeting[pos];
         pos += 1;
 
-        let _status_flags =
-            u16::from_le_bytes([greeting[pos], greeting[pos + 1]]);
+        let _status_flags = u16::from_le_bytes([greeting[pos], greeting[pos + 1]]);
         pos += 2;
 
-        let capability_flags_2 =
-            u16::from_le_bytes([greeting[pos], greeting[pos + 1]]);
+        let capability_flags_2 = u16::from_le_bytes([greeting[pos], greeting[pos + 1]]);
         pos += 2;
 
         let auth_data_len = if greeting.len() > pos {
@@ -253,7 +262,12 @@ impl BinlogClient {
         packet.extend_from_slice(b"mysql_native_password");
 
         let len = packet.len() as u32;
-        let header = [(len & 0xff) as u8, ((len >> 8) & 0xff) as u8, ((len >> 16) & 0xff) as u8, 1];
+        let header = [
+            (len & 0xff) as u8,
+            ((len >> 8) & 0xff) as u8,
+            ((len >> 16) & 0xff) as u8,
+            1,
+        ];
         self.stream
             .write_all(&header)
             .await
@@ -348,11 +362,31 @@ impl BinlogClient {
             let mut pos = 0;
             while pos + 19 <= packet.len() {
                 let header = EventHeader {
-                    timestamp: u32::from_le_bytes([packet[pos], packet[pos + 1], packet[pos + 2], packet[pos + 3]]),
+                    timestamp: u32::from_le_bytes([
+                        packet[pos],
+                        packet[pos + 1],
+                        packet[pos + 2],
+                        packet[pos + 3],
+                    ]),
                     event_type: packet[pos + 4],
-                    server_id: u32::from_le_bytes([packet[pos + 5], packet[pos + 6], packet[pos + 7], packet[pos + 8]]),
-                    event_size: u32::from_le_bytes([packet[pos + 9], packet[pos + 10], packet[pos + 11], packet[pos + 12]]),
-                    log_pos: u32::from_le_bytes([packet[pos + 13], packet[pos + 14], packet[pos + 15], packet[pos + 16]]),
+                    server_id: u32::from_le_bytes([
+                        packet[pos + 5],
+                        packet[pos + 6],
+                        packet[pos + 7],
+                        packet[pos + 8],
+                    ]),
+                    event_size: u32::from_le_bytes([
+                        packet[pos + 9],
+                        packet[pos + 10],
+                        packet[pos + 11],
+                        packet[pos + 12],
+                    ]),
+                    log_pos: u32::from_le_bytes([
+                        packet[pos + 13],
+                        packet[pos + 14],
+                        packet[pos + 15],
+                        packet[pos + 16],
+                    ]),
                     flags: u16::from_le_bytes([packet[pos + 17], packet[pos + 18]]),
                 };
 
@@ -379,7 +413,11 @@ impl BinlogClient {
         }
     }
 
-    fn parse_event(&mut self, header: &EventHeader, data: &[u8]) -> Result<Option<BinlogEvent>, String> {
+    fn parse_event(
+        &mut self,
+        header: &EventHeader,
+        data: &[u8],
+    ) -> Result<Option<BinlogEvent>, String> {
         match header.event_type {
             0x0f => self.parse_format_description(data),
             0x04 => self.parse_rotate(data),
@@ -405,8 +443,12 @@ impl BinlogClient {
         if data.len() < 8 {
             return Ok(Some(BinlogEvent::Rotate(String::new(), 0)));
         }
-        let pos = u64::from_le_bytes([data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7]]);
-        let filename = String::from_utf8_lossy(&data[8..]).trim_end_matches('\0').to_string();
+        let pos = u64::from_le_bytes([
+            data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7],
+        ]);
+        let filename = String::from_utf8_lossy(&data[8..])
+            .trim_end_matches('\0')
+            .to_string();
         Ok(Some(BinlogEvent::Rotate(filename, pos)))
     }
 
@@ -416,13 +458,19 @@ impl BinlogClient {
         let mut p = pos + 2;
 
         let db_end = data[p..].iter().position(|&b| b == 0).ok_or_else(|| {
-            format!("missing null terminator for database name in table map at offset {}", p)
+            format!(
+                "missing null terminator for database name in table map at offset {}",
+                p
+            )
         })?;
         let database = String::from_utf8_lossy(&data[p..p + db_end]).to_string();
         p += db_end + 1;
 
         let table_end = data[p..].iter().position(|&b| b == 0).ok_or_else(|| {
-            format!("missing null terminator for table name in table map at offset {}", p)
+            format!(
+                "missing null terminator for table name in table map at offset {}",
+                p
+            )
         })?;
         let table = String::from_utf8_lossy(&data[p..p + table_end]).to_string();
         p += table_end + 1;
@@ -440,7 +488,8 @@ impl BinlogClient {
         for &ct in &column_types {
             let meta_len = match ct {
                 0 | 246 => 2,
-                1 | 2 | 3 | 4 | 5 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 17 | 18 | 19 | 245 | 247 | 248 => 0,
+                1 | 2 | 3 | 4 | 5 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 17 | 18 | 19
+                | 245 | 247 | 248 => 0,
                 16 => {
                     if p < data.len() {
                         2
@@ -489,7 +538,12 @@ impl BinlogClient {
         Ok(Some(BinlogEvent::TableMap(event)))
     }
 
-    fn parse_write_rows(&mut self, _header: &EventHeader, data: &[u8], version: u8) -> Result<Option<BinlogEvent>, String> {
+    fn parse_write_rows(
+        &mut self,
+        _header: &EventHeader,
+        data: &[u8],
+        version: u8,
+    ) -> Result<Option<BinlogEvent>, String> {
         let (table_id, mut pos) = read_packed_u48(data);
         let _flags = u16::from_le_bytes([data[pos], data[pos + 1]]);
         pos += 2;
@@ -502,8 +556,14 @@ impl BinlogClient {
         pos += n;
 
         let table = self.tables.get(&table_id).cloned();
-        let column_types = table.as_ref().map(|t| t.column_types.clone()).unwrap_or_default();
-        let column_metas = table.as_ref().map(|t| t.column_metas.clone()).unwrap_or_default();
+        let column_types = table
+            .as_ref()
+            .map(|t| t.column_types.clone())
+            .unwrap_or_default();
+        let column_metas = table
+            .as_ref()
+            .map(|t| t.column_metas.clone())
+            .unwrap_or_default();
 
         let mut rows = Vec::new();
         while pos < data.len() {
@@ -518,7 +578,12 @@ impl BinlogClient {
         Ok(Some(BinlogEvent::WriteRows { table_id, rows }))
     }
 
-    fn parse_update_rows(&mut self, _header: &EventHeader, data: &[u8], version: u8) -> Result<Option<BinlogEvent>, String> {
+    fn parse_update_rows(
+        &mut self,
+        _header: &EventHeader,
+        data: &[u8],
+        version: u8,
+    ) -> Result<Option<BinlogEvent>, String> {
         let (table_id, mut pos) = read_packed_u48(data);
         let _flags = u16::from_le_bytes([data[pos], data[pos + 1]]);
         pos += 2;
@@ -531,8 +596,14 @@ impl BinlogClient {
         pos += n;
 
         let table = self.tables.get(&table_id).cloned();
-        let column_types = table.as_ref().map(|t| t.column_types.clone()).unwrap_or_default();
-        let column_metas = table.as_ref().map(|t| t.column_metas.clone()).unwrap_or_default();
+        let column_types = table
+            .as_ref()
+            .map(|t| t.column_types.clone())
+            .unwrap_or_default();
+        let column_metas = table
+            .as_ref()
+            .map(|t| t.column_metas.clone())
+            .unwrap_or_default();
 
         let mut rows = Vec::new();
         while pos < data.len() {
@@ -552,7 +623,12 @@ impl BinlogClient {
         Ok(Some(BinlogEvent::UpdateRows { table_id, rows }))
     }
 
-    fn parse_delete_rows(&mut self, _header: &EventHeader, data: &[u8], version: u8) -> Result<Option<BinlogEvent>, String> {
+    fn parse_delete_rows(
+        &mut self,
+        _header: &EventHeader,
+        data: &[u8],
+        version: u8,
+    ) -> Result<Option<BinlogEvent>, String> {
         let (table_id, mut pos) = read_packed_u48(data);
         let _flags = u16::from_le_bytes([data[pos], data[pos + 1]]);
         pos += 2;
@@ -565,8 +641,14 @@ impl BinlogClient {
         pos += n;
 
         let table = self.tables.get(&table_id).cloned();
-        let column_types = table.as_ref().map(|t| t.column_types.clone()).unwrap_or_default();
-        let column_metas = table.as_ref().map(|t| t.column_metas.clone()).unwrap_or_default();
+        let column_types = table
+            .as_ref()
+            .map(|t| t.column_types.clone())
+            .unwrap_or_default();
+        let column_metas = table
+            .as_ref()
+            .map(|t| t.column_metas.clone())
+            .unwrap_or_default();
 
         let mut rows = Vec::new();
         while pos < data.len() {
@@ -585,7 +667,9 @@ impl BinlogClient {
         if data.len() < 8 {
             return Ok(Some(BinlogEvent::Xid(0)));
         }
-        let xid = u64::from_le_bytes([data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7]]);
+        let xid = u64::from_le_bytes([
+            data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7],
+        ]);
         Ok(Some(BinlogEvent::Xid(xid)))
     }
 
@@ -595,7 +679,8 @@ impl BinlogClient {
         }
         let _flags = data[0];
         let uuid_bytes = &data[1..17];
-        let uuid_val = uuid::Uuid::from_slice(uuid_bytes).map_err(|e| format!("invalid uuid: {}", e))?;
+        let uuid_val =
+            uuid::Uuid::from_slice(uuid_bytes).map_err(|e| format!("invalid uuid: {}", e))?;
         let gno = u64::from_le_bytes([
             data[17], data[18], data[19], data[20], data[21], data[22], data[23], data[24],
         ]);
@@ -696,7 +781,10 @@ fn read_row(data: &[u8], column_types: &[u8], column_metas: &[u16]) -> (Vec<Valu
         } else if byte_len == 0 && pos < data.len() {
             let n;
             let val: Value;
-            if col_type == MYSQL_TYPE_VARCHAR || col_type == MYSQL_TYPE_VAR_STRING || col_type == MYSQL_TYPE_STRING {
+            if col_type == MYSQL_TYPE_VARCHAR
+                || col_type == MYSQL_TYPE_VAR_STRING
+                || col_type == MYSQL_TYPE_STRING
+            {
                 let (len, s) = decode_length_encoded_string(&data[pos..]);
                 if len > 0 {
                     val = serde_json::Value::String(s);
@@ -705,8 +793,10 @@ fn read_row(data: &[u8], column_types: &[u8], column_metas: &[u16]) -> (Vec<Valu
                     val = Value::Null;
                     n = 1;
                 }
-            } else if col_type == MYSQL_TYPE_BLOB || col_type == MYSQL_TYPE_TINY_BLOB
-                || col_type == MYSQL_TYPE_MEDIUM_BLOB || col_type == MYSQL_TYPE_LONG_BLOB
+            } else if col_type == MYSQL_TYPE_BLOB
+                || col_type == MYSQL_TYPE_TINY_BLOB
+                || col_type == MYSQL_TYPE_MEDIUM_BLOB
+                || col_type == MYSQL_TYPE_LONG_BLOB
             {
                 let blob_len = match col_type {
                     MYSQL_TYPE_TINY_BLOB => 1,
@@ -719,7 +809,8 @@ fn read_row(data: &[u8], column_types: &[u8], column_metas: &[u16]) -> (Vec<Valu
                     let size = match blob_len {
                         1 => data[pos] as usize,
                         2 => u16::from_le_bytes([data[pos], data[pos + 1]]) as usize,
-                        3 => u32::from_le_bytes([data[pos], data[pos + 1], data[pos + 2], 0]) as usize,
+                        3 => u32::from_le_bytes([data[pos], data[pos + 1], data[pos + 2], 0])
+                            as usize,
                         _ => 0,
                     };
                     let start = pos + blob_len;

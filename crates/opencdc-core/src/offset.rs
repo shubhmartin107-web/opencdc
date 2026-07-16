@@ -104,7 +104,10 @@ impl ConnectorOffset {
     pub fn to_cursor_map(&self) -> HashMap<String, serde_json::Value> {
         let mut map = HashMap::new();
         if let Some(lsn) = self.lsn {
-            map.insert("lsn".to_string(), serde_json::Value::String(format!("{:#X}", lsn)));
+            map.insert(
+                "lsn".to_string(),
+                serde_json::Value::String(format!("{:#X}", lsn)),
+            );
         }
         if let Some(file) = &self.file {
             map.insert("file".to_string(), serde_json::Value::String(file.clone()));
@@ -116,7 +119,10 @@ impl ConnectorOffset {
             map.insert("gtid".to_string(), serde_json::Value::String(gtid.clone()));
         }
         if let Some(token) = &self.resume_token {
-            map.insert("resume_token".to_string(), serde_json::Value::String(token.clone()));
+            map.insert(
+                "resume_token".to_string(),
+                serde_json::Value::String(token.clone()),
+            );
         }
         map
     }
@@ -201,8 +207,8 @@ mod tests {
 
     #[test]
     fn test_offset_to_cursor_map_with_all_fields() {
-        let offset = ConnectorOffset::from_binlog_position("bin.001", 456)
-            .with_ts_ms(1710000000000);
+        let offset =
+            ConnectorOffset::from_binlog_position("bin.001", 456).with_ts_ms(1710000000000);
         let map = offset.to_cursor_map();
         assert_eq!(map.get("file").unwrap().as_str().unwrap(), "bin.001");
         assert_eq!(map.get("pos").unwrap().as_u64().unwrap(), 456);
@@ -219,7 +225,10 @@ mod tests {
     fn test_offset_to_cursor_map_with_resume_token() {
         let offset = ConnectorOffset::from_resume_token("tok_123");
         let map = offset.to_cursor_map();
-        assert_eq!(map.get("resume_token").unwrap().as_str().unwrap(), "tok_123");
+        assert_eq!(
+            map.get("resume_token").unwrap().as_str().unwrap(),
+            "tok_123"
+        );
     }
 
     #[test]

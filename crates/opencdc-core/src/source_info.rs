@@ -206,12 +206,7 @@ mod tests {
 
     #[test]
     fn test_source_info_creation() {
-        let source = SourceInfo::new(
-            &ConnectorType::Postgres,
-            "mydb",
-            Some("public"),
-            "users",
-        );
+        let source = SourceInfo::new(&ConnectorType::Postgres, "mydb", Some("public"), "users");
         assert_eq!(source.db, "mydb");
         assert_eq!(source.schema, Some("public".to_string()));
         assert_eq!(source.table, "users");
@@ -298,10 +293,7 @@ mod tests {
             let json = serde_json::to_string(phase).unwrap();
             let deserialized: SnapshotPhase = serde_json::from_str(&json).unwrap();
             assert_eq!(*phase, deserialized);
-            assert_eq!(
-                SnapshotPhase::from_str(phase.as_str()),
-                Some(*phase)
-            );
+            assert_eq!(SnapshotPhase::from_str(phase.as_str()), Some(*phase));
         }
     }
 }

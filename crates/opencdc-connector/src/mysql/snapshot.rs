@@ -1,11 +1,11 @@
 use tokio::io::{AsyncWriteExt, BufReader};
 use tokio::net::TcpStream;
 
+use opencdc_core::ConnectorType;
 use opencdc_core::change_event::ChangeEvent;
 use opencdc_core::error::{Error, Result};
 use opencdc_core::offset::ConnectorOffset;
 use opencdc_core::source_info::SourceInfo;
-use opencdc_core::ConnectorType;
 
 use super::config::MySqlConnectorConfig;
 
@@ -102,9 +102,20 @@ impl MySqlSnapshotter {
     ) -> Result<Vec<serde_json::Map<String, serde_json::Value>>> {
         let q = query.as_bytes().to_vec();
         let len = q.len() as u32;
-        let header = [(len & 0xff) as u8, ((len >> 8) & 0xff) as u8, ((len >> 16) & 0xff) as u8, 0];
-        writer.write_all(&header).await.map_err(|e| Error::Other(format!("write query header: {}", e)))?;
-        writer.write_all(&q).await.map_err(|e| Error::Other(format!("write query body: {}", e)))?;
+        let header = [
+            (len & 0xff) as u8,
+            ((len >> 8) & 0xff) as u8,
+            ((len >> 16) & 0xff) as u8,
+            0,
+        ];
+        writer
+            .write_all(&header)
+            .await
+            .map_err(|e| Error::Other(format!("write query header: {}", e)))?;
+        writer
+            .write_all(&q)
+            .await
+            .map_err(|e| Error::Other(format!("write query body: {}", e)))?;
 
         let resp = read_mysql_packet(reader).await?;
         if resp.is_empty() {
@@ -141,10 +152,7 @@ impl MySqlSnapshotter {
                 } else {
                     let (n, s) = decode_length_str(&row_packet[pos..]);
                     pos += n;
-                    row.insert(
-                        format!("col_{}", i),
-                        serde_json::Value::String(s),
-                    );
+                    row.insert(format!("col_{}", i), serde_json::Value::String(s));
                 }
             }
             results.push(row);
@@ -202,7 +210,11 @@ fn parse_greeting(data: &[u8]) -> Result<Vec<u8>> {
     let _cap2 = u16::from_le_bytes([data[pos], data[pos + 1]]);
     pos += 2;
     let _ = pos;
-    let auth_len = if pos < data.len() { data[pos] as usize } else { 0 };
+    let auth_len = if pos < data.len() {
+        data[pos] as usize
+    } else {
+        0
+    };
     pos += 1;
 
     let mut auth = auth1.to_vec();
@@ -224,13 +236,13 @@ async fn send_auth_packet(
     hasher.update(config.password.as_bytes());
     let hash1 = hasher.finalize();
 
-        let mut hasher = Sha1::new();
-        hasher.update(hash1);
-        let hash2 = hasher.finalize();
+    let mut hasher = Sha1::new();
+    hasher.update(hash1);
+    let hash2 = hasher.finalize();
 
-        let mut hasher = Sha1::new();
-        hasher.update(scramble);
-        hasher.update(hash2);
+    let mut hasher = Sha1::new();
+    hasher.update(scramble);
+    hasher.update(hash2);
     let hash3 = hasher.finalize();
 
     let mut auth_response = Vec::with_capacity(20);
@@ -252,16 +264,25 @@ async fn send_auth_packet(
     packet.push(0);
 
     let len = packet.len() as u32;
-    let header = [(len & 0xff) as u8, ((len >> 8) & 0xff) as u8, ((len >> 16) & 0xff) as u8, 1];
-    writer.write_all(&header).await.map_err(|e| Error::Other(format!("auth header: {}", e)))?;
-    writer.write_all(&packet).await.map_err(|e| Error::Other(format!("auth body: {}", e)))?;
+    let header = [
+        (len & 0xff) as u8,
+        ((len >> 8) & 0xff) as u8,
+        ((len >> 16) & 0xff) as u8,
+        1,
+    ];
+    writer
+        .write_all(&header)
+        .await
+        .map_err(|e| Error::Other(format!("auth header: {}", e)))?;
+    writer
+        .write_all(&packet)
+        .await
+        .map_err(|e| Error::Other(format!("auth body: {}", e)))?;
 
     Ok(())
 }
 
-async fn read_ok_packet(
-    reader: &mut BufReader<tokio::net::tcp::OwnedReadHalf>,
-) -> Result<()> {
+async fn read_ok_packet(reader: &mut BufReader<tokio::net::tcp::OwnedReadHalf>) -> Result<()> {
     let resp = read_mysql_packet(reader).await?;
     if resp.is_empty() {
         return Err(Error::Other("empty auth response".to_string()));

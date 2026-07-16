@@ -1,11 +1,11 @@
 use futures::TryStreamExt;
-use mongodb::change_stream::event::{OperationType, ResumeToken};
 use mongodb::Client;
+use mongodb::change_stream::event::{OperationType, ResumeToken};
 
+use opencdc_core::ConnectorType;
 use opencdc_core::change_event::ChangeEvent;
 use opencdc_core::error::{Error, Result};
 use opencdc_core::source_info::SourceInfo;
-use opencdc_core::ConnectorType;
 
 use super::config::MongoDbConnectorConfig;
 use super::snapshot::bson_doc_to_json;
@@ -51,28 +51,18 @@ impl MongoDbStreamer {
                 None => continue,
             };
 
-            if !config.collections.is_empty()
-                && !config.collections.contains(&coll_name)
-            {
+            if !config.collections.is_empty() && !config.collections.contains(&coll_name) {
                 continue;
             }
 
-            let source = SourceInfo::new(
-                &ConnectorType::Mongodb,
-                &db_name,
-                None::<&str>,
-                &coll_name,
-            );
+            let source =
+                SourceInfo::new(&ConnectorType::Mongodb, &db_name, None::<&str>, &coll_name);
 
             match event.operation_type {
                 OperationType::Insert => {
                     if let Some(ref doc) = event.full_document {
                         let after = bson_doc_to_json(doc);
-                        if sink
-                            .send(ChangeEvent::create(after, source))
-                            .await
-                            .is_err()
-                        {
+                        if sink.send(ChangeEvent::create(after, source)).await.is_err() {
                             break;
                         }
                     }

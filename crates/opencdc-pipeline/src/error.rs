@@ -53,10 +53,7 @@ mod tests {
         let core_err = CoreError::Other("core issue".to_string());
         let err: PipelineError = core_err.into();
         assert!(matches!(err, PipelineError::Core(_)));
-        assert_eq!(
-            err.to_string(),
-            "Core error: core issue"
-        );
+        assert_eq!(err.to_string(), "Core error: core issue");
     }
 
     #[test]

@@ -34,9 +34,7 @@ impl DebeziumArrowMapper {
             DebeziumSchemaType::Timestamp | DebeziumSchemaType::MicroTimestamp => {
                 DataType::Timestamp(TimeUnit::Microsecond, None)
             }
-            DebeziumSchemaType::NanoTimestamp => {
-                DataType::Timestamp(TimeUnit::Nanosecond, None)
-            }
+            DebeziumSchemaType::NanoTimestamp => DataType::Timestamp(TimeUnit::Nanosecond, None),
             DebeziumSchemaType::Date => DataType::Date64,
             DebeziumSchemaType::Time | DebeziumSchemaType::MicroTime => {
                 DataType::Time64(TimeUnit::Microsecond)
@@ -57,9 +55,7 @@ impl DebeziumArrowMapper {
         let mut arrow_field = Field::new(&field.field_name, arrow_type, nullable);
 
         if let Some(doc) = &field.doc {
-            arrow_field = arrow_field.with_metadata(
-                [("doc".to_string(), doc.to_string())].into(),
-            );
+            arrow_field = arrow_field.with_metadata([("doc".to_string(), doc.to_string())].into());
         }
 
         arrow_field
@@ -294,8 +290,10 @@ mod tests {
         let mut params = HashMap::new();
         params.insert("precision".to_string(), "10".to_string());
         params.insert("scale".to_string(), "2".to_string());
-        let arrow_type =
-            DebeziumArrowMapper::debezium_type_to_arrow(&DebeziumSchemaType::Decimal, Some(&params));
+        let arrow_type = DebeziumArrowMapper::debezium_type_to_arrow(
+            &DebeziumSchemaType::Decimal,
+            Some(&params),
+        );
         assert_eq!(arrow_type, DataType::Decimal128(10, 2));
     }
 
@@ -315,11 +313,8 @@ mod tests {
             DebeziumField::string("name").optional(),
         ];
 
-        let envelope = DebeziumArrowMapper::make_envelope_schema(
-            "opencdc.testdb.public",
-            "users",
-            &columns,
-        );
+        let envelope =
+            DebeziumArrowMapper::make_envelope_schema("opencdc.testdb.public", "users", &columns);
 
         assert_eq!(
             envelope.name.as_deref(),

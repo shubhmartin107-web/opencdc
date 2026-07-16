@@ -86,10 +86,17 @@ impl SchemaEvolution {
             }
         }
 
-        SchemaDiff { changes, is_breaking }
+        SchemaDiff {
+            changes,
+            is_breaking,
+        }
     }
 
-    pub fn evolve(&self, current: &DebeziumSchema, source: &DebeziumSchema) -> Result<DebeziumSchema, Vec<SchemaChange>> {
+    pub fn evolve(
+        &self,
+        current: &DebeziumSchema,
+        source: &DebeziumSchema,
+    ) -> Result<DebeziumSchema, Vec<SchemaChange>> {
         let diff = self.diff(current, source);
 
         if diff.is_breaking && self.policy == EvolutionPolicy::Fail {
@@ -112,10 +119,7 @@ impl SchemaEvolution {
                 }
 
                 if self.policy == EvolutionPolicy::Warn && !diff.changes.is_empty() {
-                    tracing::warn!(
-                        "schema evolution detected: {:?}",
-                        diff.changes
-                    );
+                    tracing::warn!("schema evolution detected: {:?}", diff.changes);
                 }
 
                 Ok(evolved)
@@ -204,10 +208,7 @@ mod tests {
 
         let evolution = SchemaEvolution::default();
         let evolved = evolution.evolve(&schema, &schema).unwrap();
-        assert_eq!(
-            evolved.fields.as_ref().unwrap().len(),
-            1
-        );
+        assert_eq!(evolved.fields.as_ref().unwrap().len(), 1);
     }
 
     #[test]

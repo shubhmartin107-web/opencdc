@@ -5,11 +5,11 @@ pub mod snapshot;
 
 use async_trait::async_trait;
 
+use opencdc_core::ConnectorType;
 use opencdc_core::change_event::ChangeEvent;
 use opencdc_core::error::{Error, Result};
 use opencdc_core::offset::ConnectorOffset;
 use opencdc_core::source_info::SourceInfo;
-use opencdc_core::ConnectorType;
 
 use crate::config::{ConnectorConfig, SnapshotContext, StreamContext};
 use crate::r#trait::Connector;
@@ -48,11 +48,17 @@ impl MySqlConnector {
                 Err(e) => {
                     last_error = Some(Error::Other(format!(
                         "mysql connect attempt {}/{} failed: {}",
-                        attempt + 1, max_attempts, e
+                        attempt + 1,
+                        max_attempts,
+                        e
                     )));
                     if attempt + 1 < max_attempts {
                         let delay = std::time::Duration::from_millis(500 * (attempt as u64 + 1));
-                        tracing::warn!("mysql connection attempt {} failed, retrying in {:?}...", attempt + 1, delay);
+                        tracing::warn!(
+                            "mysql connection attempt {} failed, retrying in {:?}...",
+                            attempt + 1,
+                            delay
+                        );
                         tokio::time::sleep(delay).await;
                     }
                 }
@@ -146,11 +152,7 @@ impl Connector for MySqlConnector {
                 .as_ref()
                 .and_then(|o| o.file.as_deref())
                 .unwrap_or("");
-            let pos = ctx
-                .offset
-                .as_ref()
-                .and_then(|o| o.pos)
-                .unwrap_or(4) as u32;
+            let pos = ctx.offset.as_ref().and_then(|o| o.pos).unwrap_or(4) as u32;
 
             client
                 .dump_binlog(filename, pos)
@@ -191,10 +193,7 @@ impl Connector for MySqlConnector {
                                 None::<&str>,
                                 &tm.table,
                             );
-                            let event = ChangeEvent::create(
-                                serde_json::Value::Object(obj),
-                                source,
-                            );
+                            let event = ChangeEvent::create(serde_json::Value::Object(obj), source);
                             if sink.send(event).await.is_err() {
                                 break;
                             }
@@ -208,16 +207,12 @@ impl Connector for MySqlConnector {
                             let mut after_obj = serde_json::Map::new();
                             for (i, _col) in tm.column_types.iter().enumerate() {
                                 if i < before.columns.len() {
-                                    before_obj.insert(
-                                        format!("col_{}", i),
-                                        before.columns[i].clone(),
-                                    );
+                                    before_obj
+                                        .insert(format!("col_{}", i), before.columns[i].clone());
                                 }
                                 if i < after.columns.len() {
-                                    after_obj.insert(
-                                        format!("col_{}", i),
-                                        after.columns[i].clone(),
-                                    );
+                                    after_obj
+                                        .insert(format!("col_{}", i), after.columns[i].clone());
                                 }
                             }
                             let source = SourceInfo::new(
@@ -243,10 +238,7 @@ impl Connector for MySqlConnector {
                             let mut obj = serde_json::Map::new();
                             for (i, _col) in tm.column_types.iter().enumerate() {
                                 if i < row.columns.len() {
-                                    obj.insert(
-                                        format!("col_{}", i),
-                                        row.columns[i].clone(),
-                                    );
+                                    obj.insert(format!("col_{}", i), row.columns[i].clone());
                                 }
                             }
                             let source = SourceInfo::new(
@@ -255,10 +247,7 @@ impl Connector for MySqlConnector {
                                 None::<&str>,
                                 &tm.table,
                             );
-                            let event = ChangeEvent::delete(
-                                serde_json::Value::Object(obj),
-                                source,
-                            );
+                            let event = ChangeEvent::delete(serde_json::Value::Object(obj), source);
                             if sink.send(event).await.is_err() {
                                 break;
                             }

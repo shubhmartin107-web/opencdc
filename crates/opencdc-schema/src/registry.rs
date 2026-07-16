@@ -89,10 +89,7 @@ impl SchemaRegistryClient {
             .send()
             .await
             .map_err(|e| {
-                opencdc_core::error::Error::Other(format!(
-                    "schema registry request failed: {}",
-                    e
-                ))
+                opencdc_core::error::Error::Other(format!("schema registry request failed: {}", e))
             })?;
 
         if !response.status().is_success() {
@@ -110,24 +107,18 @@ impl SchemaRegistryClient {
             ))
         })?;
 
-        result["id"]
-            .as_u64()
-            .map(|id| id as u32)
-            .ok_or_else(|| {
-                opencdc_core::error::Error::Deserialization(
-                    "schema registry response missing 'id'".to_string(),
-                )
-            })
+        result["id"].as_u64().map(|id| id as u32).ok_or_else(|| {
+            opencdc_core::error::Error::Deserialization(
+                "schema registry response missing 'id'".to_string(),
+            )
+        })
     }
 
     pub async fn get_schema_by_id(&self, id: u32) -> Result<RegisteredSchema> {
         let url = format!("{}/schemas/ids/{}", self.config.url, id);
 
         let response = self.client.get(&url).send().await.map_err(|e| {
-            opencdc_core::error::Error::Other(format!(
-                "schema registry request failed: {}",
-                e
-            ))
+            opencdc_core::error::Error::Other(format!("schema registry request failed: {}", e))
         })?;
 
         if !response.status().is_success() {
@@ -176,20 +167,11 @@ impl SchemaRegistryClient {
         })
     }
 
-    pub async fn get_latest_schema(
-        &self,
-        subject: &str,
-    ) -> Result<RegisteredSchema> {
-        let url = format!(
-            "{}/subjects/{}/versions/latest",
-            self.config.url, subject
-        );
+    pub async fn get_latest_schema(&self, subject: &str) -> Result<RegisteredSchema> {
+        let url = format!("{}/subjects/{}/versions/latest", self.config.url, subject);
 
         let response = self.client.get(&url).send().await.map_err(|e| {
-            opencdc_core::error::Error::Other(format!(
-                "schema registry request failed: {}",
-                e
-            ))
+            opencdc_core::error::Error::Other(format!("schema registry request failed: {}", e))
         })?;
 
         if !response.status().is_success() {
@@ -241,10 +223,7 @@ impl SchemaRegistryClient {
     pub async fn subjects(&self) -> Result<Vec<String>> {
         let url = format!("{}/subjects", self.config.url);
         let response = self.client.get(&url).send().await.map_err(|e| {
-            opencdc_core::error::Error::Other(format!(
-                "schema registry request failed: {}",
-                e
-            ))
+            opencdc_core::error::Error::Other(format!("schema registry request failed: {}", e))
         })?;
 
         if !response.status().is_success() {
@@ -267,10 +246,7 @@ impl SchemaRegistryClient {
     pub async fn delete_subject(&self, subject: &str) -> Result<()> {
         let url = format!("{}/subjects/{}", self.config.url, subject);
         let response = self.client.delete(&url).send().await.map_err(|e| {
-            opencdc_core::error::Error::Other(format!(
-                "schema registry request failed: {}",
-                e
-            ))
+            opencdc_core::error::Error::Other(format!("schema registry request failed: {}", e))
         })?;
 
         if !response.status().is_success() {
@@ -306,10 +282,7 @@ impl SchemaRegistryClient {
             .send()
             .await
             .map_err(|e| {
-                opencdc_core::error::Error::Other(format!(
-                    "schema registry request failed: {}",
-                    e
-                ))
+                opencdc_core::error::Error::Other(format!("schema registry request failed: {}", e))
             })?;
 
         if !response.status().is_success() {
@@ -332,10 +305,7 @@ impl SchemaRegistryClient {
     pub async fn config(&self) -> Result<CompatibilityConfig> {
         let url = format!("{}/config", self.config.url);
         let response = self.client.get(&url).send().await.map_err(|e| {
-            opencdc_core::error::Error::Other(format!(
-                "schema registry request failed: {}",
-                e
-            ))
+            opencdc_core::error::Error::Other(format!("schema registry request failed: {}", e))
         })?;
 
         if !response.status().is_success() {

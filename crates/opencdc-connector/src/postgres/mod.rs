@@ -7,10 +7,10 @@ pub mod types;
 use async_trait::async_trait;
 use tokio_postgres::NoTls;
 
+use opencdc_core::ConnectorType;
 use opencdc_core::change_event::ChangeEvent;
 use opencdc_core::error::{Error, Result};
 use opencdc_core::offset::ConnectorOffset;
-use opencdc_core::ConnectorType;
 
 use crate::config::{ConnectorConfig, SnapshotContext, StreamContext};
 use crate::r#trait::Connector;
@@ -42,7 +42,9 @@ impl PostgresConnector {
         }
     }
 
-    async fn connect_with_retry(config: &PostgresConnectorConfig) -> Result<(tokio_postgres::Client, tokio::task::JoinHandle<()>)> {
+    async fn connect_with_retry(
+        config: &PostgresConnectorConfig,
+    ) -> Result<(tokio_postgres::Client, tokio::task::JoinHandle<()>)> {
         let max_attempts = config.max_reconnect_attempts.max(1);
         let mut last_error = None;
 
@@ -58,10 +60,19 @@ impl PostgresConnector {
                     return Ok((client, handle));
                 }
                 Err(e) => {
-                    last_error = Some(Error::Other(format!("postgres connect attempt {}/{} failed: {}", attempt + 1, max_attempts, e)));
+                    last_error = Some(Error::Other(format!(
+                        "postgres connect attempt {}/{} failed: {}",
+                        attempt + 1,
+                        max_attempts,
+                        e
+                    )));
                     if attempt + 1 < max_attempts {
                         let delay = std::time::Duration::from_millis(500 * (attempt as u64 + 1));
-                        tracing::warn!("postgres connection attempt {} failed, retrying in {:?}...", attempt + 1, delay);
+                        tracing::warn!(
+                            "postgres connection attempt {} failed, retrying in {:?}...",
+                            attempt + 1,
+                            delay
+                        );
                         tokio::time::sleep(delay).await;
                     }
                 }
@@ -111,9 +122,7 @@ impl Connector for PostgresConnector {
                 &[],
             )
             .await
-            .map_err(|e| {
-                Error::Other(format!("failed to create publication: {}", e))
-            })?;
+            .map_err(|e| Error::Other(format!("failed to create publication: {}", e)))?;
 
         // Ensure replication slot exists
         let slot_name = &pg_config.slot_name;

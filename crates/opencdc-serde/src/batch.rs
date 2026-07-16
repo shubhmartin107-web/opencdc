@@ -36,13 +36,15 @@ impl BatchConverter {
                 .collect();
 
             let array: ArrayRef = Arc::new(
-                col_data.iter().map(|v| v.as_deref()).collect::<StringArray>(),
+                col_data
+                    .iter()
+                    .map(|v| v.as_deref())
+                    .collect::<StringArray>(),
             );
             columns.push(array);
         }
 
-        RecordBatch::try_new(Arc::new(schema.clone()), columns)
-            .map_err(Error::Arrow)
+        RecordBatch::try_new(Arc::new(schema.clone()), columns).map_err(Error::Arrow)
     }
 
     pub fn batch_to_events(batch: &RecordBatch) -> Result<Vec<ChangeEvent>> {
@@ -62,26 +64,25 @@ impl BatchConverter {
                 .map(|arr| arr.value(row_idx));
 
             let source = opencdc_core::source_info::SourceInfo {
-                db: extract_string_col(batch, "db", row_idx)
-                    .unwrap_or_default(),
+                db: extract_string_col(batch, "db", row_idx).unwrap_or_default(),
                 schema: extract_string_col(batch, "schema", row_idx),
-                table: extract_string_col(batch, "table", row_idx)
-                    .unwrap_or_default(),
-                connector: extract_string_col(batch, "connector", row_idx)
-                    .unwrap_or_default(),
+                table: extract_string_col(batch, "table", row_idx).unwrap_or_default(),
+                connector: extract_string_col(batch, "connector", row_idx).unwrap_or_default(),
                 lsn: extract_int_col(batch, "lsn", row_idx),
                 tx_id: extract_int_col(batch, "txId", row_idx),
                 ..Default::default()
             };
 
-            events.push(ChangeEvent::new(opencdc_core::change_event::ChangePayload {
-                before: None,
-                after: None,
-                source,
-                op,
-                ts_ms,
-                transaction: None,
-            }));
+            events.push(ChangeEvent::new(
+                opencdc_core::change_event::ChangePayload {
+                    before: None,
+                    after: None,
+                    source,
+                    op,
+                    ts_ms,
+                    transaction: None,
+                },
+            ));
         }
 
         Ok(events)
@@ -117,7 +118,10 @@ mod tests {
             "users",
         );
         let events = vec![
-            ChangeEvent::create(serde_json::json!({"id": 1, "name": "Alice"}), source.clone()),
+            ChangeEvent::create(
+                serde_json::json!({"id": 1, "name": "Alice"}),
+                source.clone(),
+            ),
             ChangeEvent::create(serde_json::json!({"id": 2, "name": "Bob"}), source),
         ];
 

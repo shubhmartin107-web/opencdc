@@ -48,10 +48,7 @@ impl Pipeline {
         self.running
     }
 
-    pub async fn run(
-        &mut self,
-        snapshot_tables: Option<Vec<String>>,
-    ) -> PipelineResult<()> {
+    pub async fn run(&mut self, snapshot_tables: Option<Vec<String>>) -> PipelineResult<()> {
         if self.running {
             return Err(PipelineError::Stopped(
                 "pipeline is already running".to_string(),
@@ -63,8 +60,7 @@ impl Pipeline {
 
         // Step 1: Run snapshot if tables requested
         if let Some(tables) = snapshot_tables {
-            let (snap_sink, mut snap_stream) =
-                tokio::sync::mpsc::channel::<ChangeEvent>(1024);
+            let (snap_sink, mut snap_stream) = tokio::sync::mpsc::channel::<ChangeEvent>(1024);
 
             let snap_ctx = SnapshotContext { tables };
             let mut conn = connector.lock().await;
@@ -91,8 +87,7 @@ impl Pipeline {
     }
 
     async fn stream_from_offset(&mut self, offset: Option<ConnectorOffset>) -> PipelineResult<()> {
-        let (stream_sink, mut stream_rx) =
-            tokio::sync::mpsc::channel::<ChangeEvent>(1024);
+        let (stream_sink, mut stream_rx) = tokio::sync::mpsc::channel::<ChangeEvent>(1024);
 
         let stream_ctx = StreamContext {
             offset,
@@ -147,15 +142,15 @@ impl Pipeline {
 
         for sink in &self.sinks {
             let mut sink = sink.lock().await;
-            sink.close().await.map_err(|e| {
-                PipelineError::Sink(format!("close error: {}", e))
-            })?;
+            sink.close()
+                .await
+                .map_err(|e| PipelineError::Sink(format!("close error: {}", e)))?;
         }
 
         let mut conn = self.connector.lock().await;
-        conn.stop().await.map_err(|e| {
-            PipelineError::Source(format!("stop error: {}", e))
-        })?;
+        conn.stop()
+            .await
+            .map_err(|e| PipelineError::Source(format!("stop error: {}", e)))?;
 
         Ok(())
     }
@@ -167,11 +162,11 @@ mod tests {
     use async_trait::async_trait;
     use opencdc_connector::config::ConnectorConfig;
     use opencdc_connector::r#trait::Connector;
+    use opencdc_core::ConnectorType;
     use opencdc_core::change_event::ChangeEvent;
     use opencdc_core::offset::ConnectorOffset;
     use opencdc_core::operation::Operation;
     use opencdc_core::source_info::SourceInfo;
-    use opencdc_core::ConnectorType;
 
     use crate::transform::FilterTransform;
 
@@ -269,8 +264,7 @@ mod tests {
         };
 
         let (sink, count) = make_count_sink();
-        let mut pipeline = Pipeline::new("test", Box::new(connector))
-            .add_sink(Box::new(sink));
+        let mut pipeline = Pipeline::new("test", Box::new(connector)).add_sink(Box::new(sink));
 
         pipeline.run(None).await.unwrap();
         assert_eq!(*count.lock().await, 2);
@@ -297,13 +291,10 @@ mod tests {
 
     #[tokio::test]
     async fn test_pipeline_stop_works() {
-        let connector = TestConnector {
-            events: Vec::new(),
-        };
+        let connector = TestConnector { events: Vec::new() };
 
         let (sink, _count) = make_count_sink();
-        let mut pipeline = Pipeline::new("test", Box::new(connector))
-            .add_sink(Box::new(sink));
+        let mut pipeline = Pipeline::new("test", Box::new(connector)).add_sink(Box::new(sink));
 
         pipeline.run(None).await.unwrap();
         pipeline.stop().await.unwrap();
@@ -312,13 +303,10 @@ mod tests {
 
     #[tokio::test]
     async fn test_pipeline_rejects_double_run() {
-        let connector = TestConnector {
-            events: Vec::new(),
-        };
+        let connector = TestConnector { events: Vec::new() };
 
         let (sink, _count) = make_count_sink();
-        let mut pipeline = Pipeline::new("test", Box::new(connector))
-            .add_sink(Box::new(sink));
+        let mut pipeline = Pipeline::new("test", Box::new(connector)).add_sink(Box::new(sink));
 
         pipeline.run(None).await.unwrap();
         let result = pipeline.run(None).await;

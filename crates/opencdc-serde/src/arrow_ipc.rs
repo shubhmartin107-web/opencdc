@@ -12,9 +12,8 @@ pub struct ArrowIpcSerde;
 
 impl ArrowIpcSerde {
     pub fn write_file(batch: &RecordBatch, path: impl AsRef<Path>) -> Result<()> {
-        let file = File::create(path.as_ref()).map_err(|e| {
-            Error::Serialization(format!("failed to create arrow file: {}", e))
-        })?;
+        let file = File::create(path.as_ref())
+            .map_err(|e| Error::Serialization(format!("failed to create arrow file: {}", e)))?;
         let writer = BufWriter::new(file);
         let mut arrow_writer =
             FileWriter::try_new(writer, batch.schema().as_ref()).map_err(Error::Arrow)?;
@@ -24,25 +23,20 @@ impl ArrowIpcSerde {
     }
 
     pub fn read_file(path: impl AsRef<Path>) -> Result<Vec<RecordBatch>> {
-        let file = File::open(path.as_ref()).map_err(|e| {
-            Error::Deserialization(format!("failed to open arrow file: {}", e))
-        })?;
+        let file = File::open(path.as_ref())
+            .map_err(|e| Error::Deserialization(format!("failed to open arrow file: {}", e)))?;
         let reader = BufReader::new(file);
-        let arrow_reader =
-            FileReader::try_new(reader, None).map_err(Error::Arrow)?;
-        let batches: Vec<RecordBatch> = arrow_reader
-            .into_iter()
-            .filter_map(|r| r.ok())
-            .collect();
+        let arrow_reader = FileReader::try_new(reader, None).map_err(Error::Arrow)?;
+        let batches: Vec<RecordBatch> = arrow_reader.into_iter().filter_map(|r| r.ok()).collect();
         Ok(batches)
     }
 
     pub fn write_stream(batches: &[RecordBatch], writer: &mut dyn Write) -> Result<()> {
-        let schema = batches.first().map(|b| b.schema()).unwrap_or(Arc::new(
-            arrow::datatypes::Schema::empty(),
-        ));
-        let mut stream_writer =
-            StreamWriter::try_new(writer, &schema).map_err(Error::Arrow)?;
+        let schema = batches
+            .first()
+            .map(|b| b.schema())
+            .unwrap_or(Arc::new(arrow::datatypes::Schema::empty()));
+        let mut stream_writer = StreamWriter::try_new(writer, &schema).map_err(Error::Arrow)?;
         for batch in batches {
             stream_writer.write(batch).map_err(Error::Arrow)?;
         }
@@ -51,8 +45,7 @@ impl ArrowIpcSerde {
     }
 
     pub fn read_stream(data: &[u8]) -> Result<Vec<RecordBatch>> {
-        let reader =
-            StreamReader::try_new(data, None).map_err(Error::Arrow)?;
+        let reader = StreamReader::try_new(data, None).map_err(Error::Arrow)?;
         let batches: Vec<RecordBatch> = reader.into_iter().filter_map(|r| r.ok()).collect();
         Ok(batches)
     }
@@ -73,11 +66,8 @@ mod tests {
             DataType::Int32,
             false,
         )]));
-        let batch = RecordBatch::try_new(
-            schema,
-            vec![Arc::new(Int32Array::from(vec![1, 2, 3]))],
-        )
-        .unwrap();
+        let batch =
+            RecordBatch::try_new(schema, vec![Arc::new(Int32Array::from(vec![1, 2, 3]))]).unwrap();
 
         let path = std::env::temp_dir().join("test_opencdc_arrow.ipc");
         ArrowIpcSerde::write_file(&batch, &path).unwrap();
@@ -94,11 +84,8 @@ mod tests {
             DataType::Int32,
             false,
         )]));
-        let batch = RecordBatch::try_new(
-            schema,
-            vec![Arc::new(Int32Array::from(vec![1]))],
-        )
-        .unwrap();
+        let batch =
+            RecordBatch::try_new(schema, vec![Arc::new(Int32Array::from(vec![1]))]).unwrap();
         let result = ArrowIpcSerde::write_file(&batch, "/nonexistent/dir/file.arrow");
         assert!(result.is_err());
     }
@@ -116,11 +103,8 @@ mod tests {
             DataType::Int32,
             false,
         )]));
-        let batch = RecordBatch::try_new(
-            schema,
-            vec![Arc::new(Int32Array::from(vec![1, 2, 3]))],
-        )
-        .unwrap();
+        let batch =
+            RecordBatch::try_new(schema, vec![Arc::new(Int32Array::from(vec![1, 2, 3]))]).unwrap();
 
         let mut buf: Vec<u8> = Vec::new();
         ArrowIpcSerde::write_stream(&[batch.clone()], &mut buf).unwrap();

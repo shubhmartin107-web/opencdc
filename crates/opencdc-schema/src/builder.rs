@@ -27,36 +27,30 @@ impl SchemaBuilder {
         let mut builder = Self::new(&envelope_name);
         builder = builder
             .add_field(
-                DebeziumField::struct_field(
-                    "before",
-                    Vec::new(),
-                )
-                .optional()
-                .named(format!("{}.{}", namespace, table)),
+                DebeziumField::struct_field("before", Vec::new())
+                    .optional()
+                    .named(format!("{}.{}", namespace, table)),
             )
             .add_field(
-                DebeziumField::struct_field(
-                    "after",
-                    Vec::new(),
-                )
-                .optional()
-                .named(format!("{}.{}", namespace, table)),
+                DebeziumField::struct_field("after", Vec::new())
+                    .optional()
+                    .named(format!("{}.{}", namespace, table)),
             )
             .add_field(
                 DebeziumField::struct_field("source", Self::source_fields())
-                    .named(format!(
-                        "io.debezium.connector.{}.Source",
-                        connector
-                    )),
+                    .named(format!("io.debezium.connector.{}.Source", connector)),
             )
             .add_field(DebeziumField::string("op"))
             .add_field(DebeziumField::int64("ts_ms").optional())
             .add_field(
-                DebeziumField::struct_field("transaction", vec![
-                    DebeziumField::string("id"),
-                    DebeziumField::int64("total_order"),
-                    DebeziumField::int64("data_collections_order"),
-                ])
+                DebeziumField::struct_field(
+                    "transaction",
+                    vec![
+                        DebeziumField::string("id"),
+                        DebeziumField::int64("total_order"),
+                        DebeziumField::int64("data_collections_order"),
+                    ],
+                )
                 .optional(),
             );
 
@@ -130,15 +124,10 @@ mod tests {
 
     #[test]
     fn test_builder_envelope() {
-        let schema = SchemaBuilder::new_envelope(
-            "opencdc",
-            "testdb",
-            Some("public"),
-            "users",
-        )
-        .with_column(DebeziumField::int32("id"))
-        .with_column(DebeziumField::string("name").optional())
-        .build();
+        let schema = SchemaBuilder::new_envelope("opencdc", "testdb", Some("public"), "users")
+            .with_column(DebeziumField::int32("id"))
+            .with_column(DebeziumField::string("name").optional())
+            .build();
 
         assert_eq!(
             schema.name.as_deref(),

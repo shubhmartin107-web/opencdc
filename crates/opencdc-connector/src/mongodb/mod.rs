@@ -4,10 +4,10 @@ pub mod stream;
 
 use async_trait::async_trait;
 
+use opencdc_core::ConnectorType;
 use opencdc_core::change_event::ChangeEvent;
 use opencdc_core::error::{Error, Result};
 use opencdc_core::offset::ConnectorOffset;
-use opencdc_core::ConnectorType;
 
 use crate::config::{ConnectorConfig, SnapshotContext, StreamContext};
 use crate::r#trait::Connector;
@@ -27,7 +27,9 @@ impl MongoDbConnector {
     }
 
     pub fn with_config(config: MongoDbConnectorConfig) -> Self {
-        Self { config: Some(config) }
+        Self {
+            config: Some(config),
+        }
     }
 
     async fn connect_with_retry(config: &MongoDbConnectorConfig) -> Result<mongodb::Client> {
@@ -47,7 +49,9 @@ impl MongoDbConnector {
                         Err(e) => {
                             last_error = Some(Error::Other(format!(
                                 "mongodb ping attempt {}/{} failed: {}",
-                                attempt + 1, max_attempts, e
+                                attempt + 1,
+                                max_attempts,
+                                e
                             )));
                         }
                     }
@@ -55,14 +59,20 @@ impl MongoDbConnector {
                 Err(e) => {
                     last_error = Some(Error::Other(format!(
                         "mongodb connect attempt {}/{} failed: {}",
-                        attempt + 1, max_attempts, e
+                        attempt + 1,
+                        max_attempts,
+                        e
                     )));
                 }
             }
 
             if attempt + 1 < max_attempts {
                 let delay = std::time::Duration::from_millis(500 * (attempt as u64 + 1));
-                tracing::warn!("mongodb connection attempt {} failed, retrying in {:?}...", attempt + 1, delay);
+                tracing::warn!(
+                    "mongodb connection attempt {} failed, retrying in {:?}...",
+                    attempt + 1,
+                    delay
+                );
                 tokio::time::sleep(delay).await;
             }
         }
@@ -170,7 +180,9 @@ mod tests {
     fn test_mongodb_connector_stop_does_not_panic() {
         let mut connector = MongoDbConnector::new();
         // stop is a no-op, should not panic
-        let result = tokio::runtime::Runtime::new().unwrap().block_on(connector.stop());
+        let result = tokio::runtime::Runtime::new()
+            .unwrap()
+            .block_on(connector.stop());
         assert!(result.is_ok());
     }
 }

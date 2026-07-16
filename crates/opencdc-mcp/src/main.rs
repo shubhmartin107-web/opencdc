@@ -13,10 +13,7 @@ fn init_tracing() {
     let is_json = std::env::var("OPENCDC_LOG_FORMAT").as_deref() == Ok("json");
 
     let builder = tracing_subscriber::fmt()
-        .with_env_filter(
-            EnvFilter::from_default_env()
-                .add_directive(tracing::Level::INFO.into()),
-        )
+        .with_env_filter(EnvFilter::from_default_env().add_directive(tracing::Level::INFO.into()))
         .with_writer(std::io::stderr)
         .with_ansi(false);
 

@@ -56,10 +56,7 @@ impl EnvelopeBuilder {
                     field_type: serde_json::Value::String("struct".to_string()),
                     fields: Some(build_source_schema_fields()),
                     optional: Some(false),
-                    name: Some(format!(
-                        "io.debezium.connector.{}.Source",
-                        connector_name
-                    )),
+                    name: Some(format!("io.debezium.connector.{}.Source", connector_name)),
                     ..Default::default()
                 },
                 DebeziumField {
@@ -145,7 +142,11 @@ mod tests {
             DebeziumField::string("name").optional(),
         ];
         let schema = EnvelopeBuilder::build_envelope_schema(
-            "opencdc", "testdb", Some("public"), "users", &columns,
+            "opencdc",
+            "testdb",
+            Some("public"),
+            "users",
+            &columns,
         );
         assert_eq!(
             schema.name.as_deref(),

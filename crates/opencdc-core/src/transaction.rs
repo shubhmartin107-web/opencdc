@@ -97,12 +97,10 @@ mod tests {
             id: "tx-2".to_string(),
             status: TransactionStatus::End,
             event_count: Some(5),
-            data_collections: Some(vec![
-                DataCollection {
-                    data_collection: "public.users".to_string(),
-                    event_count: 3,
-                },
-            ]),
+            data_collections: Some(vec![DataCollection {
+                data_collection: "public.users".to_string(),
+                event_count: 3,
+            }]),
             ts_ms: Some(1710000000001),
         };
         assert_eq!(meta.status, TransactionStatus::End);
@@ -131,7 +129,10 @@ mod tests {
         let json = serde_json::to_value(&meta).unwrap();
         assert_eq!(json["id"], "tx-3");
         assert_eq!(json["status"], "begin");
-        assert_eq!(json["data_collections"][0]["data_collection"], "public.orders");
+        assert_eq!(
+            json["data_collections"][0]["data_collection"],
+            "public.orders"
+        );
 
         let deserialized: TransactionMetadata = serde_json::from_value(json).unwrap();
         assert_eq!(deserialized.id, meta.id);
