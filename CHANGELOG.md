@@ -68,6 +68,14 @@
 - **MCP semaphore panic on shutdown** — `mcp/state.rs`: returns `Option` instead of `.expect("semaphore closed")` for graceful shutdown
 - **Health endpoint dropped errors** — `mcp/health.rs`: logs write/shutdown failures via `tracing::warn`
 
+### Workspace: OpenLake-dependent crates removed from workspace members
+
+- `opencdc-sink-openlake` and `opencdc-demo` removed from `[workspace] members` — they depend on a private `openlake-core`/`openlake-query` project
+- `openlake-core` and `openlake-query` removed from `[workspace.dependencies]`
+- Workspace reduced from 9 to 7 crates for CI compatibility
+- Both crates remain in the repo as standalone Cargo projects for users with access to the OpenLake project
+- CI test count: 216 (was 223)
+
 ### Phase 5: Security & Polish
 
 - REST catalog auth: bearer token support in `RestCatalogSinkConfig` with `auth_token` field

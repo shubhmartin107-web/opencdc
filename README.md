@@ -1,6 +1,6 @@
 # OpenCDC
 
-[![CI](https://github.com/anomalyco/opencdc/actions/workflows/ci.yml/badge.svg)](https://github.com/anomalyco/opencdc/actions/workflows/ci.yml)
+[![CI](https://github.com/shubhmartin107-web/opencdc/actions/workflows/ci.yml/badge.svg)](https://github.com/shubhmartin107-web/opencdc/actions/workflows/ci.yml)
 [![Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 
 **OpenCDC** is a low-latency, log-based Change Data Capture (CDC) system written in Rust. It supports Postgres, MySQL, and MongoDB sources and produces events in the Debezium-compatible message format with Arrow-native processing.
@@ -14,6 +14,7 @@
 - **MCP server** — Expose CDC operations via the Model Context Protocol (stdio transport)
 - **Backpressure** — Bounded channels (capacity 1024) across the entire data path
 - **Graceful shutdown** — SIGINT handling with clean connector teardown
+- **7 crates in workspace** — Core, serde, schema, connector, pipeline, MCP, config (+ optional OpenLake sink & demo)
 - **Health endpoint** — Lightweight HTTP server for `/health` (JSON) and `/metrics` (Prometheus) with CORS
 - **Rate limiting** — Semaphore-based concurrent MCP tool execution (configurable via `OPENCDC_MAX_CONCURRENT_TOOLS`)
 - **Reconnect with backoff** — All connectors support configurable retry attempts and exponential backoff
@@ -49,8 +50,11 @@
 | `opencdc-connector` | Connector trait + Postgres (`postgres`), MySQL (`mysql`), MongoDB (`mongodb`) backends |
 | `opencdc-pipeline` | Pipeline runtime: Sink/Transform traits, StdoutSink, NullSink, Filter/Rename transforms |
 | `opencdc-mcp` | MCP server exposing CDC tools via stdio transport |
-| `opencdc-sink-openlake` | OpenLake sink (in-memory TableStore + persistent Iceberg REST catalog) |
 | `opencdc-config` | TOML configuration loader for all connector types and pipeline config |
+| `opencdc-sink-openlake`\* | OpenLake sink (in-memory TableStore + persistent Iceberg REST catalog) |
+| `opencdc-demo`\* | End-to-end demo binary |
+
+> \* Not workspace members — require private `openlake-core`/`openlake-query` dependency.
 
 ## Quick Start
 
@@ -84,7 +88,7 @@ docker compose --profile mongodb up -d
 
 ```bash
 make test
-# All 223 tests pass with zero clippy warnings.
+# All 216 tests pass with zero clippy warnings.
 ```
 
 ### Install Pre-commit Hook

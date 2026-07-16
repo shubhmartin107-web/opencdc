@@ -17,9 +17,9 @@ cargo fmt --all             # Format all code
 - `crates/opencdc-connector` — Connector trait + Postgres connector (`postgres` feature) + MySQL connector (`mysql` feature) + MongoDB connector (`mongodb` feature)
 - `crates/opencdc-mcp` — MCP server binary exposing CDC tools via stdio transport
 - `crates/opencdc-pipeline` — Pipeline runtime: Sink/Transform traits, StdoutSink, NullSink, Filter/Rename transforms
-- `crates/opencdc-sink-openlake` — OpenLakeSink (in-memory) + RestCatalogSink (persistent via Iceberg REST catalog): writes CDC events into OpenLake's TableStore as Arrow RecordBatches, with optional REST commit
-- `crates/opencdc-demo` — Demo binary: end-to-end pipeline with DemoConnector → transforms → StdoutSink + OpenLakeSink
 - `crates/opencdc-config` — TOML configuration loader for all connector types and pipeline config
+
+> Note: `crates/opencdc-sink-openlake` and `crates/opencdc-demo` exist in the repo but are **not workspace members** (they depend on a private `openlake-core`/`openlake-query` project at `../openlake/`). Build them manually if you have access.
 
 ## Common Commands
 
@@ -66,15 +66,14 @@ docker build -t opencdc-mcp .
 
 ```
 opencdc-core      93 tests
-opencdc-connector  38 tests  (+postgres/mysql/mongodb configs + reconnect + health)
+opencdc-connector  38 tests
 opencdc-schema     19 tests
 opencdc-serde      19 tests
 opencdc-pipeline   18 tests
 opencdc-mcp        18 tests
-opencdc-sink-openlake  7 tests
 opencdc-config     11 tests
 ------------------
-Total:            223 tests, 0 clippy warnings
+Total:            216 tests, 0 clippy warnings
 ```
 
 ## Architecture Notes

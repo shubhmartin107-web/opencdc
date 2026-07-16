@@ -2,7 +2,7 @@
 
 ## Overview
 
-OpenCDC is a Change Data Capture system built as a Rust workspace of 9 crates. Events flow from a source database through a configurable pipeline of transforms and into one or more sinks. The system is designed for low latency, backpressure-aware data movement, and full Debezium message format compatibility.
+OpenCDC is a Change Data Capture system built as a Rust workspace of 7 crates (plus 2 optional crates requiring a private OpenLake dependency). Events flow from a source database through a configurable pipeline of transforms and into one or more sinks. The system is designed for low latency, backpressure-aware data movement, and full Debezium message format compatibility.
 
 ## Data Flow
 
@@ -25,10 +25,11 @@ opencdc-core
   ├── opencdc-schema
   ├── opencdc-connector
   │     ├── opencdc-pipeline
-  │     │     ├── opencdc-sink-openlake
-  │     │     │     └── opencdc-demo
+  │     │     └── [opencdc-sink-openlake]* + [opencdc-demo]*
   │     └── opencdc-mcp
   └── opencdc-config
+
+* Not workspace members — require private openlake-core/openlake-query.
 ```
 
 ### Layer 1: Core (`opencdc-core`)

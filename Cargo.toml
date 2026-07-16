@@ -7,8 +7,6 @@ members = [
     "crates/opencdc-connector",
     "crates/opencdc-mcp",
     "crates/opencdc-pipeline",
-    "crates/opencdc-sink-openlake",
-    "crates/opencdc-demo",
     "crates/opencdc-config",
 ]
 
@@ -43,5 +41,3 @@ hex = "0.4"
 tokio-util = "0.7"
 mongodb = { version = "3.7", features = ["rustls-tls"] }
 reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
-openlake-core = { path = "../openlake/crates/openlake-core" }
-openlake-query = { path = "../openlake/crates/openlake-query" }
