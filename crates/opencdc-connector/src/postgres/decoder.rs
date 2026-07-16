@@ -456,21 +456,6 @@ fn read_string(data: &[u8], offset: &mut usize) -> String {
 }
 
 #[cfg(test)]
-pub(crate) fn make_text_tuple_value(value: &str) -> Vec<u8> {
-    let val_bytes = value.as_bytes();
-    let mut buf = Vec::new();
-    buf.push(b't');
-    buf.extend_from_slice(&(val_bytes.len() as i32).to_be_bytes());
-    buf.extend_from_slice(val_bytes);
-    buf
-}
-
-#[cfg(test)]
-pub(crate) fn make_null_tuple_value() -> Vec<u8> {
-    vec![b'n']
-}
-
-#[cfg(test)]
 mod tests {
     use super::*;
 
